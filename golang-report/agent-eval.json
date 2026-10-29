@@ -1,0 +1,6 @@
+{
+  "live": false,
+  "reason": "真实模型评测跳过：缺显式开关 AGENT_EVAL_LIVE=1、缺网关地址（EASYAPI_BASE_URL）、缺网关 Key（EASYAPI_KEY / AGENT_EVAL_GATEWAY_KEY）、缺模型清单（AGENT_EVAL_MODELS）、缺积分预算（AGENT_EVAL_POINTS_BUDGET）；读不到仓库根下的 .env 文本，只看了环境变量",
+  "cases": [],
+  "stats": "未跑（配置缺失）"
+}

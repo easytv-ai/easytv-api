@@ -1,0 +1,14 @@
+#!/bin/sh
+# 推送前检查：go vet + go test（gofmt 只提示不阻塞）。启用：make hooks；临时跳过：git push --no-verify
+set -e
+cd "$(git rev-parse --show-toplevel)"
+unformatted=$(gofmt -l $(git ls-files '*.go') 2>/dev/null || true)
+if [ -n "$unformatted" ]; then
+  echo "[pre-push] 提示：以下文件未经 gofmt（不阻塞）："
+  echo "$unformatted" | sed 's/^/  /'
+fi
+echo "[pre-push] go vet ./..."
+go vet ./...
+echo "[pre-push] go test ./..."
+go test ./... > /dev/null
+echo "[pre-push] 通过"
