@@ -192,6 +192,7 @@ func SetApiRouter(router *gin.Engine) {
 
 				// 作品
 				selfRoute.GET("/work", controller.GetMyWorks)
+				selfRoute.GET("/work/likes", controller.GetMyLikedWorks)
 				selfRoute.POST("/work", controller.CreateWork)
 				selfRoute.PUT("/work/:id", controller.UpdateMyWork)
 				selfRoute.DELETE("/work/:id", controller.DeleteMyWork)

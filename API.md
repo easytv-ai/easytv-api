@@ -302,6 +302,7 @@
 | PUT | `/user/work/:id` | 修改 / 上下架 | `{ title?, description?, cover_url?, category?, status? (1/2), show_process? }` |
 | DELETE | `/user/work/:id` | 删除 | |
 | POST | `/user/work/:id/like` | 点赞 / 取消点赞（切换） | 返回 `{ liked, like_count }` |
+| GET | `/user/work/likes` | 我赞过的作品 | 分页；只含仍在发布中的，按点赞时间倒序，`liked` 恒为 true |
 | POST | `/user/work/:id/report` | 举报作品 | `{ reason, content? }`，见 1.8 |
 | GET | `/user/task/summary` | 任务中心概览 | `{ total, active, succeeded, failed, cancelled, points_today, points_30d, points_frozen }` |
 | POST | `/user/task/:id/retry` | 重试失败 / 已取消的任务 | 按原参数新建任务并重新预扣积分，返回新任务 |

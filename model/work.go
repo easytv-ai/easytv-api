@@ -137,6 +137,26 @@ func AttachLiked(userId int, list []*Work) {
 	}
 }
 
+// GetLikedWorks 我赞过的作品（仍在发布中的），按点赞时间倒序。
+func GetLikedWorks(userId int, pageInfo *common.PageInfo) (list []*Work, total int64, err error) {
+	base := DB.Table("work").
+		Joins("JOIN work_like ON work_like.work_id = work.id AND work_like.user_id = ?", userId).
+		Where("work.deleted_at IS NULL AND work.status = ?", WorkStatusPublished)
+	if err = base.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	err = base.Select("work.*").Order("work_like.id desc").
+		Limit(pageInfo.GetPageSize()).Offset(pageInfo.GetStartIdx()).Scan(&list).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	for _, w := range list {
+		w.Liked = true
+	}
+	attachWorkAuthors(list)
+	return list, total, nil
+}
+
 // WorkAuthor 作品作者摘要。
 type WorkAuthor struct {
 	Id       int    `json:"id"`

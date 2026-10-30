@@ -231,6 +231,16 @@ func GetMyWorks(c *gin.Context) {
 	pagedResponse(c, list, total)
 }
 
+// GetMyLikedWorks 我赞过的作品（GET /user/work/likes），只含仍在发布中的。
+func GetMyLikedWorks(c *gin.Context) {
+	list, total, err := model.GetLikedWorks(c.GetInt("id"), parsePageInfo(c))
+	if err != nil {
+		respondModelError(c, err, "查询失败")
+		return
+	}
+	pagedResponse(c, list, total)
+}
+
 // CreateWork 从资产发布作品（POST /user/work）。
 func CreateWork(c *gin.Context) {
 	userId := c.GetInt("id")
