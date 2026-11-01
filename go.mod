@@ -4,21 +4,22 @@ go 1.27.3
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/bytedance/gopkg v0.1.3
+	github.com/bytedance/gopkg v0.1.4
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/go-sql-driver/mysql v1.6.0
+	github.com/go-sql-driver/mysql v1.10.1
 	github.com/joho/godotenv v1.5.1
-	github.com/qiniu/go-sdk/v7 v7.28.0
-	github.com/shopspring/decimal v1.4.0
-	github.com/smartwalle/alipay/v3 v3.2.29
+	github.com/qiniu/go-sdk/v7 v7.29.0
+	github.com/shopspring/decimal v1.6.0
+	github.com/smartwalle/alipay/v3 v3.2.31
 	github.com/wechatpay-apiv3/wechatpay-go v0.2.21
-	golang.org/x/crypto v0.57.0
-	gorm.io/driver/mysql v1.4.3
-	gorm.io/gorm v1.25.2
+	golang.org/x/crypto v0.58.0
+	gorm.io/driver/mysql v1.6.0
+	gorm.io/gorm v1.30.0
 )
 
 require (
+	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/alex-ant/gomath v0.0.0-20160516115720-89013a210a82 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
@@ -46,16 +47,16 @@ require (
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.59.1 // indirect
 	github.com/smartwalle/ncrypto v1.0.4 // indirect
-	github.com/smartwalle/ngx v1.1.0 // indirect
+	github.com/smartwalle/ngx v1.1.2 // indirect
 	github.com/smartwalle/nsign v1.0.9 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/net v0.60.0 // indirect
-	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
-	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	modernc.org/fileutil v1.0.0 // indirect
 )
