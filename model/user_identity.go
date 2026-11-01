@@ -3,10 +3,10 @@ package model
 import "strings"
 
 const (
-	IdentityOfficial = "easytv_official"
+	IdentityOfficial   = "easytv_official"
 	IdentityEnterprise = "enterprise"
-	IdentityTeacher = "easytv_teacher"
-	IdentityAssistant = "easytv_teaching_assistant"
+	IdentityTeacher    = "easytv_teacher"
+	IdentityAssistant  = "easytv_teaching_assistant"
 )
 
 // UserIdentities 管理端可选运营身份。

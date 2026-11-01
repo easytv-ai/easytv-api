@@ -85,8 +85,8 @@ type ModelPrice struct {
 	// 空串按模型名推断，见 EffectiveAbilities / InferAbilities。
 	Abilities string `json:"abilities" gorm:"type:varchar(255);default:'';comment:媒体能力标签，逗号分隔，空=按模型名推断"`
 	Status    int    `json:"status" gorm:"index;default:1;comment:1 生效 2 停用"`
-	CreatedAt  int64  `json:"created_at" gorm:"bigint"`
-	UpdatedAt  int64  `json:"updated_at" gorm:"bigint"`
+	CreatedAt int64  `json:"created_at" gorm:"bigint"`
+	UpdatedAt int64  `json:"updated_at" gorm:"bigint"`
 
 	// 以下为列表接口填充的展示字段（非表字段），见 FillEffective
 	PromoActive                  bool   `json:"promo_active" gorm:"-"`

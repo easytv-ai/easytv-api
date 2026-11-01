@@ -22,7 +22,7 @@ const (
 	KeyWechatPayNotifyURL   = "WechatPayNotifyURL" // 留空则 ServerAddress + /wechat/webhook
 	KeyWechatPayEnabled     = "WechatPayEnabled"
 
-	// 支付宝（当面付/电脑网站支付，证书模式，对齐 easyapi-ai-api）
+	// 支付宝（当面付/电脑网站支付，证书模式，对齐 New API）
 	KeyAlipayAppId            = "AlipayAppId"
 	KeyAlipayAppPrivateKey    = "AlipayAppPrivateKey"
 	KeyAlipayPublicKey        = "AlipayPublicKey"        // 支付宝公钥证书（LoadAlipayCertPublicKey）

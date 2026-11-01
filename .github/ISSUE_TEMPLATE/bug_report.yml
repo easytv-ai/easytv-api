@@ -1,0 +1,73 @@
+name: 🐛 Bug report
+description: Something is not working as expected / 功能异常
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please search existing issues first.
+        **Security issues must not be reported here** — see [SECURITY.md](../blob/main/SECURITY.md).
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. Chinese is fine / 可以用中文.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: Output of `git rev-parse --short HEAD`, a release tag, or "hosted easytv.ai".
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: How are you running it?
+      options:
+        - Local development
+        - Self-hosted (binary / systemd)
+        - Self-hosted (Docker)
+        - Cloudflare Workers
+        - Hosted easytv.ai
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, browser, Go version, database version — whatever is relevant.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Remove tokens, DSNs and personal data before pasting.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I removed all secrets and personal data from this report.
+          required: true

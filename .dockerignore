@@ -1,0 +1,14 @@
+.git
+.github
+.githooks
+.env
+.env.*
+!.env.example
+upload
+logs
+build
+golang-report
+*.md
+!README.md
+docker-compose.yml
+deploy.sh

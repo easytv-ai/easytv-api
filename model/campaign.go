@@ -27,9 +27,9 @@ type Campaign struct {
 	UpdatedAt    int64          `json:"updated_at" gorm:"bigint"`
 	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 
-	PrizesView       json.RawMessage     `json:"prizes" gorm:"-"`
-	ModelPromoItems  []CampaignPromoItem `json:"model_promo_items,omitempty" gorm:"-"`
-	MyEntry          *CampaignEntry      `json:"my_entry,omitempty" gorm:"-"`
+	PrizesView      json.RawMessage     `json:"prizes" gorm:"-"`
+	ModelPromoItems []CampaignPromoItem `json:"model_promo_items,omitempty" gorm:"-"`
+	MyEntry         *CampaignEntry      `json:"my_entry,omitempty" gorm:"-"`
 }
 
 func (Campaign) TableName() string { return "campaign" }

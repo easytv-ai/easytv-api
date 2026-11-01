@@ -24,7 +24,7 @@ var (
 
 // GetAlipayClient 返回证书模式的支付宝客户端（AppId + 应用私钥 + 支付宝公钥证书 +
 // 应用公钥证书 + 根证书），供收款（alipay.trade.precreate / alipay.trade.page.pay）、
-// 查单（alipay.trade.query）与退款等场景复用。与 easyapi-ai-api 对齐，保留
+// 查单（alipay.trade.query）与退款等场景复用。与 New API 对齐，保留
 // AlipayIsProduction 沙箱开关与实例缓存作为优化。
 // 需配置 AlipayAppId、AlipayAppPrivateKey、AlipayPublicKey（支付宝公钥证书）、
 // AlipayAppCertPublicKey、AlipayRootCert。

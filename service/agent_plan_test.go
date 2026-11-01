@@ -309,8 +309,8 @@ func TestBuildAgentPromptCarriesContext(t *testing.T) {
 	nodes := []AssistNode{{Id: "n2", Kind: "image", Label: "首帧", Prompt: "橘猫", Selected: true, Upstream: []string{"n1"}}}
 	prompt := BuildAgentPrompt(AgentPromptInput{
 		Mode: "patch", Kinds: AgentKindSchemas(), Models: agentTestCatalog().All(),
-		Canvas: AgentCanvasText(nodes, map[string]*AgentNodeRecord{"n2": {Model: "gpt-image-1", Status: "failed", Error: "审核没过"}}),
-		History: []AssistTurn{{Role: "user", Content: "上一句话"}},
+		Canvas:   AgentCanvasText(nodes, map[string]*AgentNodeRecord{"n2": {Model: "gpt-image-1", Status: "failed", Error: "审核没过"}}),
+		History:  []AssistTurn{{Role: "user", Content: "上一句话"}},
 		Question: "把首帧换成戴帽子的猫",
 		Issues:   []AgentIssue{{Code: AgentCodeModelNotFound, Severity: "error", NodeId: "n2", Message: "模型没接入", Hint: "换一个"}},
 		ToolFeed: []string{"[工具 search_models] type=video 可用：kling-v1"},

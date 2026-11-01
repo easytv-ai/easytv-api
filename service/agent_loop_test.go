@@ -398,7 +398,7 @@ func TestAgentParamsKeepsCanvasContext(t *testing.T) {
 }
 
 // TestAgentRetryRounds 重试轮数：没指定时按运营配置给，不能兜底成 1
-//（只给一轮的话模型一调工具就把轮数用光，循环拿不到计划会直接判任务失败）。
+// （只给一轮的话模型一调工具就把轮数用光，循环拿不到计划会直接判任务失败）。
 func TestAgentRetryRounds(t *testing.T) {
 	model.SetSettingCache(setting.AgentMaxRoundsPatch, "4")
 	model.SetSettingCache(setting.AgentMaxRoundsGenerate, "6")

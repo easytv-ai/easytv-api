@@ -1,0 +1,63 @@
+# One-command self-hosting: API + MySQL + Redis.
+#
+#   cp .env.example .env          # set ROOT_PASSWORD, CRYPTO_SECRET (and keep SQL_DSN as below)
+#   docker compose up -d
+#   open http://localhost:8383
+#
+# SQL_DSN / REDIS_CONN_STRING below override whatever is in .env so the API talks
+# to the bundled services. Change MYSQL_PASSWORD in one place: the `x-db` block.
+
+x-db: &db
+  MYSQL_DATABASE: easytv
+  MYSQL_USER: easytv
+  MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me-easytv}
+
+services:
+  api:
+    build: .
+    image: easytv-api:local
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SQL_DSN: easytv:${MYSQL_PASSWORD:-change-me-easytv}@tcp(mysql:3306)/easytv?charset=utf8mb4&parseTime=true&loc=Local&timeout=30s
+      REDIS_CONN_STRING: redis://redis:6379/0
+      PORT: "8383"
+    ports:
+      - "${API_PORT:-8383}:8383"
+    volumes:
+      - upload:/app/upload
+      - logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      <<: *db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root}
+    volumes:
+      - mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-change-me-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis:/data
+
+volumes:
+  mysql:
+  redis:
+  upload:
+  logs:

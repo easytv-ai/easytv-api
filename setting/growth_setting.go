@@ -34,7 +34,7 @@ const (
 	GrowthInviteRechargeCap   = "GrowthInviteRechargeCap"   // 每个邀请人累计返利积分上限，默认 2000
 	GrowthInviteDailyIpLimit  = "GrowthInviteDailyIpLimit"  // 同 IP 每日可绑定邀请的新注册数，默认 3
 	GrowthSignupDailyIpLimit  = "GrowthSignupDailyIpLimit"  // 同 IP 每日新注册上限（0 不限），默认 10
-	GrowthInviteBaseUrl       = "GrowthInviteBaseUrl"       // 邀请链接站点前缀，默认 https://www.easytv.ai
+	GrowthInviteBaseUrl       = "GrowthInviteBaseUrl"       // 邀请链接站点前缀，留空则回退 ServerAddress
 
 	// ---- 口令红包（T15）----
 	GrowthBonusDefaultRechargeRate = "GrowthBonusDefaultRechargeRate" // 首充加赠默认比例，默认 0.20
@@ -229,7 +229,7 @@ func GetGrowthConfig() GrowthConfig {
 		InviteRechargeRate:  getRateSetting(GrowthInviteRechargeRate, 0.10),
 		InviteRechargeCap:   getIntSetting(GrowthInviteRechargeCap, 2000),
 		InviteDailyIpLimit:  getIntSetting(GrowthInviteDailyIpLimit, 3),
-		InviteBaseUrl:       getStringSettingDefault(GrowthInviteBaseUrl, "https://www.easytv.ai"),
+		InviteBaseUrl:       getStringSettingDefault(GrowthInviteBaseUrl, strings.TrimRight(GetSettingString(KeyServerAddress), "/")),
 		SignupDailyIpLimit:  getIntSetting(GrowthSignupDailyIpLimit, 10),
 
 		BonusDefaultRechargeRate: getRateSetting(GrowthBonusDefaultRechargeRate, 0.20),

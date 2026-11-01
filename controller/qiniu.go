@@ -9,7 +9,7 @@ import (
 )
 
 // GetQiniuUploadToken 获取七牛上传 Token（GET /user/qiniu/upload-token?key=，UserAuth）。
-// 返回 up_token / upload_token / bucket / domain，供前端直传七牛（镜像母版 easyapi-ai-api）。
+// 返回 up_token / upload_token / bucket / domain，供前端直传七牛（兼容 New API）。
 func GetQiniuUploadToken(c *gin.Context) {
 	if !setting.IsQiniuEnabled() {
 		common.ApiErrorMsg(c, "七牛存储未启用，请先在管理端配置 QiniuAccessKey / QiniuSecretKey")

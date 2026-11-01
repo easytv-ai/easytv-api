@@ -44,8 +44,9 @@ func TestQiniuSettingDefaults(t *testing.T) {
 	if setting.GetQiniuProjectCode() != "easytv" {
 		t.Fatalf("project code default: %s", setting.GetQiniuProjectCode())
 	}
-	if setting.GetQiniuDomain() != "https://qiniu.easyapi.com" {
-		t.Fatalf("domain default: %s", setting.GetQiniuDomain())
+	// 对外域名没有缺省值：自托管者必须在 setting 里配自己的 CDN 域名
+	if setting.GetQiniuDomain() != "" {
+		t.Fatalf("domain should have no default, got: %s", setting.GetQiniuDomain())
 	}
 	// 未配置 AK/SK → 未启用
 	if setting.IsQiniuEnabled() {

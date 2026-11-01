@@ -16,7 +16,7 @@ const UserNameMaxLength = 50 // username 即账号邮箱，需容纳邮箱长度
 
 // User if you add sensitive fields, don't forget to clean them in setupLogin function.
 // Otherwise, the sensitive information will be saved on local storage in plain text!
-// 字段与 easyapi 完全一致（含第三方登录 ID 列、推广/分销/Stripe 字段），见 easyapi-ai-api model/user.go。
+// 字段与 New API 对齐（含第三方登录 ID 列、推广/分销/Stripe 字段），见 New API model/user.go。
 type User struct {
 	Id int `json:"id" gorm:"comment:用户ID"`
 	// Username 即账号邮箱（邮箱格式，小写归一化存储）；微信/OAuth 待绑定用户及 root 为历史生成名

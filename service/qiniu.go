@@ -15,7 +15,7 @@ import (
 	"github.com/qiniu/go-sdk/v7/storage"
 )
 
-// 七牛云存储封装，镜像母版 easyapi-ai-api service/qiniu.go。
+// 七牛云存储封装，兼容 New API service/qiniu.go。
 // 配置在 DB setting 表（setting/qiniu_setting.go），管理端 /admin/gateway/config 可热更新。
 
 // GenerateQiniuKey 生成七牛云存储 key：<项目码>/<日期>/<毫秒时间戳><后缀>。

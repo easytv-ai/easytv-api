@@ -1,7 +1,9 @@
 package setting
 
+import "strings"
+
 // 七牛云存储配置（DB setting 表，PascalCase 键，管理端 /admin/gateway/config 可热更新）。
-// 镜像母版 easyapi-ai-api setting/system_setting/qiniu_setting.go。
+// 兼容 New API setting/system_setting/qiniu_setting.go。
 const (
 	QiniuAccessKey   = "QiniuAccessKey"
 	QiniuSecretKey   = "QiniuSecretKey"
@@ -32,15 +34,12 @@ func GetQiniuProjectCode() string {
 	return "easytv"
 }
 
-// GetQiniuDomain 七牛 CDN 对外域名，缺省 https://qiniu.easyapi.com。
+// GetQiniuDomain 七牛 CDN 对外域名（setting QiniuDomain），启用七牛时必须配置。
 func GetQiniuDomain() string {
-	if v := GetSettingString(QiniuDomain); v != "" {
-		return v
-	}
-	return "https://qiniu.easyapi.com"
+	return strings.TrimRight(GetSettingString(QiniuDomain), "/")
 }
 
-// IsQiniuEnabled 七牛是否启用：AK/SK 都非空即启用（与母版 IsQiniuEnabled 一致）。
+// IsQiniuEnabled 七牛是否启用：AK/SK 都非空即启用（与 New API 一致）。
 func IsQiniuEnabled() bool {
 	return GetQiniuAccessKey() != "" && GetQiniuSecretKey() != ""
 }

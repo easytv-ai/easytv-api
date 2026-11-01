@@ -698,14 +698,6 @@ add_on     = round(add_on_price × seat_count × team_rate)      // 勾选加购
 - `EASYTV_LIVE_DB=1 go test ./tests -run TestLiveBillingFlow` 在真实库上跑一遍履约/预扣/退款闭环。
 - 已有的 `quota` 不迁移。
 
-### 6.6 分工建议
-
-| 谁 | 做什么 | 顺序 |
-|---|---|---|
-| CRui522 | 7 张表 + 履约/冻结/结算服务 + 下单接口复用支付通道 + 后台任务 + seed | 1 |
-| zhaokairan | manage `/plan` `/order` `/wallet` 三页换接口（字段已对齐，改法同项目/画布页） | 2，可与 1 并行做页面 |
-| chenyunc123 | 定价页真下单与支付轮询；顶栏钱包；Inspector 积分预估读单价 | 2，可与 1 并行做 UI |
-
 ## 7. 增长域（迭代一，2026-09-14 ~ 09-27）——接口约定
 
 对应任务单 T1 ~ T20（详见「EasyTV 增长地基任务单」）。所有奖励数值读 `setting` 表，键名与默认值集中在 `setting/growth_setting.go`（`GrowthXxx`），管理端「增长」面板可热更新；积分发放统一走 `service.GiftPointsWithBiz(userId, points, validDays, bizNo, reason)`：`point_log.biz_no` 记 `setting.GrowthReason*` 固定键（礼包 `signup_gift`、任务 `task_<key>`、签到 `checkin`…），`reason` 记给用户看的中文。新手任务：`first_*` 事件首次写入时由 `service.TrackOnce` 自动完成对应任务并发积分（`service/growth.go`），业务代码只需打事件。时间戳统一 Unix 秒；防刷用请求头 `EasyTV-Device`（前端生成的设备指纹，CORS 已放行）与客户端 IP。`POST /track` 请求体可额外带 `device`（页面卸载时 `sendBeacon` 无法带自定义头，服务端以头优先、其次取 body）。
@@ -803,10 +795,6 @@ add_on     = round(add_on_price × seat_count × team_rate)      // 勾选加购
 | 播放页 | `POST /user/work/:id/clone`；匿名 `GET /work/:id`、`/work/:id/process` |
 | 顶部促销条 / 模型卡 | `GET /billing/plans.promo`、`GET /generation/models` 的促销字段 |
 
-### 7.7 分工
-
-API：CRui522（T1、T5、T7、T10、T12、T15、T18）；Web：chenyunc123（T2、T4、T6、T8、T11、T13、T16、T19）；Manage：zhaokairan（T3、T9、T14、T17、T20）。提交信息前缀带任务号，如 `T12 注册绑定邀请人`。
-
 ## 8. 成片与社区（迭代二，2026-09-28 ~ 10-16）——接口约定
 
 对应任务单 T23 ~ T34。约定同第 7 节：时间戳 Unix 秒、`{success,message,data}` 包裹、失败 HTTP 200 + `success=false`。新设置键集中在 `setting/growth_setting.go`（`GrowthSkillAuthorShare`、`GrowthShare*`、`GrowthWorkClone*`、`GrowthUgc*`、`ComposeWatermarkEnabled`、`ComposePlanPrompt`、`ComposePlanModel`），`GET /app/config.growth` 下发展示值（含 `work_clone_points`）。创作者收益走 `promoter_bill.biz_type = 7`（技能分成）。
@@ -895,10 +883,6 @@ API：CRui522（T1、T5、T7、T10、T12、T15、T18）；Web：chenyunc123（T2
 | GET / PUT | `/admin/campaign/:id/entries?status=&sort=`、`/admin/campaign/entry/:id/review` | AdminAuth | 投稿列表附 `work`（作品行含作者）与 `user{id,nickname}`；审核 `{ action: approve\|reject }`；已实现 |
 | POST | `/admin/campaign/:id/settle` | RootAuth | 结束后按点赞快照排名，按 `prizes` 发积分 / 会员天数，`status → 3`，幂等 |
 
-### 8.7 分工
-
-API：T23、T24、T26、T30、T31、T33 后端（全部已实现，2026-09-13）；Web：T25、T28、T29、T32；Manage：T27、T31、T33 后台页。
-
 ## 9. 营销体系收尾（迭代三，2026-10-19 起）——接口约定
 
 补齐突围方案第 07 节里剩下的 M10（活动中心前端）、M11（关注 / 榜单 / 通知）、M12（渠道伙伴计划）、M13（召回与生命周期触达）与 M7 的会员日。约定同前：Unix 秒、`{success,message,data}`、失败 HTTP 200 + `success=false`。新设置键仍在 `setting/growth_setting.go`。
@@ -955,10 +939,6 @@ API：T23、T24、T26、T30、T31、T33 后端（全部已实现，2026-09-13）
 ### 9.5 会员日（M7 剩余项）
 
 `GET /billing/plans` 的 `promo` 新增 `member_day`（`{ day, pack_discount, active, next_at }`）：每月 `GrowthMemberDayOfMonth`（11）日积分包按 `GrowthMemberDayPackDiscount`（0.8）折；`POST /billing/quote` 与下单在当天对 `kind=points` 自动应用，响应 `discount_label` 说明。会员日不与会员价叠加计算两次，取折后价。
-
-### 9.6 分工
-
-API：M11 / M12 / M13 / 会员日后端；Web：M10 活动页、M11 关注与榜单、M12 伙伴申请与看板、M13 提醒展示；Manage：M12 伙伴审核与看板、M13 与会员日配置项。
 
 ## 10. 功能补齐（迭代四，2026-11 起）——接口约定
 
@@ -1032,10 +1012,6 @@ API：M11 / M12 / M13 / 会员日后端；Web：M10 活动页、M11 关注与榜
 | 英文礼包与邀请页 | `/en/invite/:code`、`/en/partner/:code` 由现有 i18n 路由自动覆盖（旧 `/en/i`、`/en/p` 同样 301），文案走词条 |
 
 **国际支付（Stripe）不在本迭代实现**：缺商户凭据且无法联调，留到负责人配置后单独做，避免上线未验证的支付路径。
-
-### 10.8 分工
-
-API：F2 / F4 / F5 / F7 后端；Web：会员日展示、F2 主体库 UI、F4 节点操作、F5 字幕与多语言、F6 出海前端、F7 团队 UI；Manage：F7 团队额度。
 
 ### 10.9 管理端补充（迭代四）
 
@@ -1147,7 +1123,6 @@ F7 原本还有两项没做：技能模板的团队共享、项目评论批注�
 ### 11.3 分享 / 做同款 / Skill 模板复制
 
 `SanitizeSharedGraph` 递归删除 `assetId` 与所有 `*AssetId` / `*AssetIds` 键（含 `refItems[].assetId`、导演台 `scene` 里的），以及 `subjectIds`。媒体地址保留，前端对「只有 url 没有 assetId」的引用应提示重新选入素材。
-
 
 ### 11.4 图片编辑与参考图（F01 / F06）
 
@@ -1910,7 +1885,6 @@ POST /user/media/jobs
 不新增接口。画布视频节点新增「口播」模式：台词 → 自动算时长档（约 3.5 字/秒 + 1 秒收尾，落到模型 `durations` 档位，缺省 3~15 秒）→ 固定机位近景口播提示词 → 连线的角色图 / 主体图作 `first_frame`；提交为普通视频任务：`params.mode = i2v|reference`，`params.audio = true`，`params.preset = "talking"`（网关忽略未知键，重试沿用）。模型下拉只列 `abilities` 含 `native_audio` 的视频模型。
 - 实测（2026-09-17）：网关 `/v1/videos` 对 sora-2 / hailuo-02 都回「model does not support setting generate_audio」，所以 provider 在收到含 `generate_audio` 的 400 时会**去掉该键自动重提一次**（`service/providers/easyapi.go`）；原生带声模型不带开关也出声。sora-2 8 秒口播实测：任务 191 → 资产 167，1280×720 带语音（平均 -20.5 dB）。
 
-
 ## 25. 短剧第二批：把一场双人对白戏做完整（2026-09-17）
 
 对应复审 G02 / G03 / G04 / G06 / G07 的最小版本。沿用画布、主体库、批量任务与时间线，不新增独立编辑器。
@@ -2103,7 +2077,6 @@ POST /user/media/jobs
 - **素材续写** `POST /user/asset/:id/extend`：对没有来源任务的视频资产（上传的、片段截取 / 分割等处理得到的）续写。请求 `{ model?, prompt?, seconds?(3~15，落到所选模型 `durations` 里最接近的档), node_id, canvas_id?, project_id? }`；服务端取末帧作 `first_frame` 建普通视频任务（`params.mode=fl2v`），模型按请求 → `ComposeVideoModel` → 清单第一个视频模型；提示词缺省「承接上一段画面，自然延续镜头与动作」。响应与 `POST /user/task` 相同。`node_id` 同样必须是新建节点的 id。
 - **联调实例不抢作业**（2026-09-18）：环境变量 `WORKER_TAG` 非空时，本进程建的媒体 / 合成 / 批量作业带 `worker_tag`，worker 只领同标签作业（生产为空串），且不跑全局维护任务；见 docs/ops/deploy-and-seed.md「本地联调」。
 - **看图模型运营配置**（2026-09-18）：新增 setting `VisionTextModel`（后台「增长」面板），随 `GET /app/config` 的 `growth.vision_text_model` 下发。画布反推提示词、智能编辑「智能识别」、拉片解读都优先用它（须在 `model_price` 里生效的文本模型）；空串时前端按模型名偏好自动挑（gemini → claude → gpt-5 / 4.1 → qwen-vl / glm-4v），拉片解读退回 `MediaStoryboardModel` 再退回第一个可用文本模型。
-
 
 ## 31. 画布交互补齐（对标 LibTV，2026-09-18）
 

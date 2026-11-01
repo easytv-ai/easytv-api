@@ -70,8 +70,8 @@ func TestFindStuckTasks(t *testing.T) {
 	tasks := []*model.GenerationTask{
 		{Id: 1, Status: "running", CreatedAt: now - 3600, StartedAt: now - 3000, ProgressAt: now - 60},   // 刚有进展
 		{Id: 2, Status: "running", CreatedAt: now - 3600, StartedAt: now - 3000, ProgressAt: now - 1200}, // 20 分钟没动
-		{Id: 3, Status: "pending", CreatedAt: now - 700},                                                  // 排队 11 分钟
-		{Id: 4, Status: "running", CreatedAt: now - 9000, StartedAt: now - 5400},                          // 老数据没有 progress_at
+		{Id: 3, Status: "pending", CreatedAt: now - 700},                                                 // 排队 11 分钟
+		{Id: 4, Status: "running", CreatedAt: now - 9000, StartedAt: now - 5400},                         // 老数据没有 progress_at
 	}
 	out := FindStuckTasks(tasks, now, 10)
 	if len(out) != 3 || out[0].Id != 4 || out[0].IdleMinutes != 90 || out[1].Id != 2 || out[2].Id != 3 {

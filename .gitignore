@@ -38,11 +38,12 @@ data/
 .gocache-temp
 .gopath
 .test
-token_estimator_test.go
-skills-lock.json
 .trae
 testdata/models_converted.json
 testdata/vendors_converted.json
-docs/
-scripts/
-tools/
+
+# 本地构建与测试产物
+/easytv-api
+/easytv-api.tgz
+/golang-report/
+coverage.out

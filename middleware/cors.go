@@ -4,9 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CORS 跨域中间件：无条件放行所有来源。
-// 任意带 Origin 的请求均回显该来源并允许携带凭据（与 easyapi 母版中继接口的
-// allow-all 行为一致）；预检 OPTIONS 直接返回 204；无 Origin 的请求不干预。
+// CORS 跨域中间件：回显任意来源。
+// 带 Origin 的请求原样回显该来源并允许携带凭据；预检 OPTIONS 直接返回 204；
+// 无 Origin 的请求不干预。鉴权依赖 Authorization 头而非 Cookie，因此放行所有
+// 来源不会扩大 CSRF 面；自托管时如需收紧，可在反向代理层限制 Origin。
 func CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")

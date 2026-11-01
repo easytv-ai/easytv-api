@@ -87,21 +87,21 @@ type AgentLoopInput struct {
 	TotalTimeout time.Duration
 	// MaxNodes / MaxPoints 校验与编译的上限，由调用方注入（RunAgentRounds 是纯函数，不读 setting）。
 	// 两者都 <= 0 时 RunAgentRounds 内部兜底成 60 / 0（不限）。
-	MaxNodes     int
-	MaxPoints    int
-	Nodes        []AssistNode                // 前端给的画布上下文
-	LastTasks    map[string]*AgentNodeRecord // 服务端补的真实任务记录（键 = 节点 id）
-	History      []AssistTurn
-	Canvas       *model.Canvas                // 只读；nil 表示画布不可读（get_canvas 工具据此回话）
-	Catalog      AgentModelCatalog            // 必填
-	Pricer       AgentPricer                  // 必填（regenerate 估价）
-	IsMember     bool
+	MaxNodes  int
+	MaxPoints int
+	Nodes     []AssistNode                // 前端给的画布上下文
+	LastTasks map[string]*AgentNodeRecord // 服务端补的真实任务记录（键 = 节点 id）
+	History   []AssistTurn
+	Canvas    *model.Canvas     // 只读；nil 表示画布不可读（get_canvas 工具据此回话）
+	Catalog   AgentModelCatalog // 必填
+	Pricer    AgentPricer       // 必填（regenerate 估价）
+	IsMember  bool
 	// Facts 平台事实（会员 / 免费对话 / 剩余次数 / 积分余额）正文，由调用方查好后注入。
 	// RunAgentRounds 是纯函数（不查库、单测里可能没有 DB），所以不在循环里现查；评测台 / 单测留空即可。
-	Facts        string
-	Templates    func(keyword string, limit int) []AgentTemplate // nil 时 list_templates 工具返回「（没有可复用模板）」
-	Cancelled    func() bool                                     // 每轮开始前调用；返回 true 立即停止。nil 表示不检查
-	Now          func() time.Time                                // 注入时钟（测总超时用）；nil → time.Now
+	Facts     string
+	Templates func(keyword string, limit int) []AgentTemplate // nil 时 list_templates 工具返回「（没有可复用模板）」
+	Cancelled func() bool                                     // 每轮开始前调用；返回 true 立即停止。nil 表示不检查
+	Now       func() time.Time                                // 注入时钟（测总超时用）；nil → time.Now
 }
 
 // AgentLoopResult 循环结果。
@@ -684,17 +684,17 @@ func NewAgentRetryTask(userId int, cv *model.Canvas, src *model.GenerationTask, 
 	}}
 	raw, _ := json.Marshal(params)
 	return &model.GenerationTask{
-		UserId:         userId,
-		ProjectId:      cv.ProjectId,
-		CanvasId:       cv.Id,
-		ParentTaskId:   src.Id,
-		Type:           model.TaskTypeText,
-		Provider:       provider.Name(),
-		Model:          src.Model,
-		Prompt:         prompt,
-		Params:         string(raw),
-		Inputs:         "[]",
-		PointsFrozen:   0,
+		UserId:       userId,
+		ProjectId:    cv.ProjectId,
+		CanvasId:     cv.Id,
+		ParentTaskId: src.Id,
+		Type:         model.TaskTypeText,
+		Provider:     provider.Name(),
+		Model:        src.Model,
+		Prompt:       prompt,
+		Params:       string(raw),
+		Inputs:       "[]",
+		PointsFrozen: 0,
 	}, provider, nil
 }
 
