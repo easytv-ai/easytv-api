@@ -288,6 +288,12 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.GET("/media/jobs/:id", controller.GetMyMediaJob)
 				selfRoute.POST("/partner/apply", middleware.UserCriticalRateLimit("partner"), controller.ApplyPartner)
 				selfRoute.GET("/partner/me", controller.GetMyPartner)
+				// 代理商后台（easytv-partner，API.md 9.3.1）：伙伴用自己的账号登录，只看名下归属客户的聚合
+				selfRoute.GET("/partner/console/overview", controller.PartnerConsoleOverview)
+				selfRoute.GET("/partner/console/stats", controller.PartnerConsoleStats)
+				selfRoute.GET("/partner/console/customers", controller.PartnerConsoleCustomers)
+				selfRoute.GET("/partner/console/bonus-codes", controller.PartnerConsoleBonusCodes)
+				selfRoute.PUT("/partner/console/profile", controller.PartnerConsoleUpdateProfile)
 				selfRoute.PUT("/skill/:id", controller.UpdateMySkill)
 				selfRoute.DELETE("/skill/:id", controller.DeleteMySkill)
 				selfRoute.POST("/skill/:id/favorite", controller.ToggleSkillFavorite)

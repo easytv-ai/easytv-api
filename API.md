@@ -924,6 +924,20 @@ add_on     = round(add_on_price × seat_count × team_rate)      // 勾选加购
 
 归因与返佣：注册请求 `attr.pcode`（前端从 `?pcode=` 或 `/partner/:code`（旧 `/p/:code` 301 过来）落地写 cookie，30 天）→ 绑定 `partner_customer` 并写 `user.partner_id`；`FulfillOrder` 履约后若付款人有归属伙伴，按 `rebate_rate`（0 取 `GrowthPartnerRebateRate`，默认 0.15）× 实付金额入账到伙伴的 `quota`（人民币元）并写 `promoter_bill(biz_type 9)`，同一订单只记一次，首年内有效（`GrowthPartnerRebateMonths`，默认 12）；退款时写 `biz_type 6` 冲回并扣减 `quota`。提现复用现有 `/user/withdraw`。
 
+### 9.3.1 代理商后台（easytv-partner，2026-11-02）
+
+独立前端仓库 `easytv-partner`（Nuxt 4，与 easytv-manage 同栈），给已通过审核的渠道伙伴（代理商）一个自己的后台：看板、归属客户、返佣与提现、口令效果、推广物料、资料维护。**不另建账号体系**：伙伴用自己的 EasyTV 账号登录（手机验证码 / 账号密码，与创作台同一套 `/user/login`、`/user/sms_login`），鉴权仍是 `UserAuth`，数据只限本人名下的归属客户聚合（昵称脱敏，不含客户手机号 / 邮箱 / 订单明细）。管理端「渠道伙伴」页可用现有 `POST /admin/user/:id/console_access` 签 ticket，拼上代理商后台地址（`NUXT_PUBLIC_PARTNER_URL` + `/console?ticket=`）免密进入。
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/user/partner/console/overview` | 看板总览：`GET /user/partner/me` 的全部字段 + `rebate_months`、`month:{ new_customers, paid_users, orders, amount, rebate }`、`server_time`。未申请返回 `success=false, code="not_applied"`；待审 / 驳回 / 停用照常返回 `partner`（`month` 为 0），前端据 `partner.status` 展示状态页 |
+| GET | `/user/partner/console/stats?range=7d\|30d\|90d` | 日趋势（含今天，缺的日期补 0）：`{ rows:[{ date, new_customers, orders, amount, rebate }], start_date, end_date, totals }`；`amount` 客户实付、`rebate` 返佣，均为人民币元，只统计有效返佣流水（`promoter_bill` 9 且 `status=1`） |
+| GET | `/user/partner/console/customers?paid=1\|0&sort=recent\|amount&page&page_size` | 归属客户 `{ items:[{ id, user_id, nickname(脱敏), source, first_paid_at, amount, rebate, created_at }], total }` |
+| GET | `/user/partner/console/bonus-codes?page&page_size` | 归属到我（`bonus_code.partner_user_id`）的口令红包及效果 `{ items:[{ …bonus_code, stats:{ claimed, registered, paid, amount, reward_points, bonus_points } }], total }`；只读，创建仍在运营后台 |
+| PUT | `/user/partner/console/profile` | `{ name?, kind?, contact, intro }`：待审可改全部；已驳回改完自动回到待审（清空驳回原因，`applied_at` 更新）；已通过只能改 `contact` / `intro`（改名或类型报错）；已停用不可改 |
+
+未通过审核时 `stats` / `customers` / `bonus-codes` 返回 `success=false, code="not_approved"`。返佣流水与提现沿用现有接口：`GET /user/bills/self?biz_type=9,6,3,4`、`GET /user/withdraw/self`、`POST /user/withdraw`（余额即用户 `quota` 折算的人民币）。
+
 ### 9.4 召回与生命周期触达（M13）
 
 后台任务 `service.RunLifecycleJobs()`（每 6 小时，启动 3 分钟后先跑一次）。**总开关 `GrowthLifecycleEnabled` 默认关闭**：这套任务会真的发积分、赠会员天数并发邮件，必须由运营在管理端「增长」面板确认文案与参数后主动打开，避免部署即群发。
