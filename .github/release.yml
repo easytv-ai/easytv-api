@@ -1,0 +1,18 @@
+# Categories for auto-generated GitHub release notes.
+changelog:
+  exclude:
+    labels: [skip-changelog, dependencies]
+    authors: [dependabot, "dependabot[bot]"]
+  categories:
+    - title: 🚨 Breaking changes
+      labels: [breaking]
+    - title: ✨ Features
+      labels: [enhancement, feature]
+    - title: 🐛 Bug fixes
+      labels: [bug]
+    - title: 🔒 Security
+      labels: [security]
+    - title: 📖 Documentation & translations
+      labels: [documentation, i18n]
+    - title: 🧰 Maintenance
+      labels: ["*"]

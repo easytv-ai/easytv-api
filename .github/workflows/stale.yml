@@ -1,0 +1,35 @@
+name: Stale
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-issue-stale: 60
+          days-before-issue-close: 14
+          days-before-pr-stale: 45
+          days-before-pr-close: 14
+          stale-issue-label: stale
+          stale-pr-label: stale
+          exempt-issue-labels: "bug,security,good first issue,help wanted,enhancement"
+          exempt-pr-labels: "security"
+          exempt-all-milestones: true
+          stale-issue-message: >
+            This issue has had no activity for 60 days. It will be closed in 14 days
+            unless someone comments or removes the `stale` label.
+            没有新动态的 Issue 会在 14 天后自动关闭，回复一下即可保留。
+          stale-pr-message: >
+            This pull request has had no activity for 45 days. It will be closed in
+            14 days unless it is updated. 更新一下 PR 即可保留。
+          close-issue-message: Closed for inactivity. Feel free to reopen with new information.
+          close-pr-message: Closed for inactivity. Feel free to reopen when you pick it up again.

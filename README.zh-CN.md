@@ -7,6 +7,8 @@
 [![CI](https://github.com/easytv-ai/easytv-api/actions/workflows/ci.yml/badge.svg)](https://github.com/easytv-ai/easytv-api/actions/workflows/ci.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/github/go-mod/go-version/easytv-ai/easytv-api)](go.mod)
+[![Release](https://img.shields.io/github/v/release/easytv-ai/easytv-api?include_prereleases&sort=semver)](https://github.com/easytv-ai/easytv-api/releases)
+[![Docker](https://img.shields.io/badge/ghcr.io-easytv--api-2496ED?logo=docker&logoColor=white)](https://github.com/easytv-ai/easytv-api/pkgs/container/easytv-api)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 [English](README.md) · [简体中文](README.zh-CN.md) · [接口契约](API.md) · [官网](https://easytv.ai)
@@ -56,7 +58,17 @@ docker compose up -d
 curl http://localhost:8383/healthz
 ```
 
-Compose 会启动 MySQL 8.4、Redis 7 和监听 8383 的 API，上传文件与日志放在命名卷里。首次启动自动迁移数据库，并用 `ROOT_PASSWORD` 创建 `admin` 账号。
+Compose 会拉取 `ghcr.io/easytv-ai/easytv-api:latest`，启动 MySQL 8.4、Redis 7 和监听 8383 的 API，上传文件与日志放在命名卷里。首次启动自动迁移数据库，并用 `ROOT_PASSWORD` 创建 `admin` 账号。
+
+加上 `full` profile 可以把创作台与运营后台（同样是预构建镜像）一起拉起来：
+
+```bash
+docker compose --profile full up -d     # 创作台 :3005，运营后台 :3006
+```
+
+浏览器不是通过 localhost 访问容器时，在 `.env` 里设置 `PUBLIC_API_URL` / `PUBLIC_STUDIO_URL`。想本地构建 API 镜像而不拉取，把 `docker-compose.yml` 里的 `build: .` 取消注释即可。
+
+镜像提供 `linux/amd64` 与 `linux/arm64`，标签跟随版本（`1.2.3`、`1.2`、`1`），另有 `latest` 与 `main`。
 
 ### 源码运行
 
@@ -116,6 +128,8 @@ go run . --port 8383
 ## 部署
 
 ### 二进制 + systemd
+
+可以从 [Releases](https://github.com/easytv-ai/easytv-api/releases) 下载预编译包（Linux / macOS / Windows，amd64 与 arm64），也可以自己编译：
 
 ```bash
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o easytv-api .
@@ -189,7 +203,9 @@ setting/      setting 表的类型化访问
 tests/        HTTP 级冒烟测试（sqlmock）
 ```
 
-工作流程与提交规范见 [CONTRIBUTING.md](CONTRIBUTING.md)，漏洞报告见 [SECURITY.md](SECURITY.md)，变更记录见 [CHANGELOG.md](CHANGELOG.md)。
+每次推送 CI 都会跑 gofmt、`go vet`、带 race 的测试与 `govulncheck`；打 `vX.Y.Z` 标签会用 GoReleaser 发布二进制并把多架构镜像推到 GHCR。
+
+工作流程与提交规范见 [CONTRIBUTING.md](CONTRIBUTING.md)，漏洞报告见 [SECURITY.md](SECURITY.md)，提问渠道见 [SUPPORT.md](SUPPORT.md)，变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 相关项目
 

@@ -1,0 +1,64 @@
+# GoReleaser configuration — https://goreleaser.com
+# Runs from .github/workflows/release.yml on every v* tag.
+version: 2
+
+project_name: easytv-api
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: easytv-api
+    main: .
+    binary: easytv-api
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X easytv-api/common.Version={{ .Version }}
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+      - README.zh-CN.md
+      - .env.example
+      - deploy.sh
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
+  filters:
+    exclude:
+      - "^docs"
+      - "^chore\\(deps\\)"
+      - "^ci"
+
+release:
+  draft: false
+  prerelease: auto
+  footer: |
+    ---
+    **Docker**: `docker pull ghcr.io/easytv-ai/easytv-api:{{ .Version }}`
+    Full changelog: https://github.com/easytv-ai/easytv-api/blob/main/CHANGELOG.md

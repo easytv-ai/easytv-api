@@ -1,0 +1,47 @@
+# Synced by .github/workflows/labels.yml (crazy-max/ghaction-github-labeler).
+# Edit here, not in the GitHub UI.
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+- name: enhancement
+  color: a2eeef
+  description: New feature or request
+- name: breaking
+  color: b60205
+  description: Changes behaviour or API in a backwards-incompatible way
+- name: security
+  color: ee0701
+  description: Security-related change
+- name: documentation
+  color: 0075ca
+  description: Docs, README, comments
+- name: i18n
+  color: 1d76db
+  description: Translations and locale files
+- name: dependencies
+  color: 0366d6
+  description: Dependency updates
+- name: triage
+  color: fbca04
+  description: Needs a maintainer to look at it
+- name: needs-info
+  color: e4e669
+  description: Waiting for more information from the reporter
+- name: good first issue
+  color: 7057ff
+  description: Good for newcomers
+- name: help wanted
+  color: 008672
+  description: Extra attention is needed
+- name: duplicate
+  color: cfd3d7
+  description: This issue or pull request already exists
+- name: wontfix
+  color: ffffff
+  description: This will not be worked on
+- name: stale
+  color: eeeeee
+  description: No activity for a long time
+- name: skip-changelog
+  color: ededed
+  description: Exclude from release notes

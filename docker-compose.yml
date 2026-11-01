@@ -1,8 +1,12 @@
-# One-command self-hosting: API + MySQL + Redis.
+# One-command self-hosting.
 #
-#   cp .env.example .env          # set ROOT_PASSWORD, CRYPTO_SECRET (and keep SQL_DSN as below)
-#   docker compose up -d
-#   open http://localhost:8383
+#   cp .env.example .env                   # set ROOT_PASSWORD, CRYPTO_SECRET
+#   docker compose up -d                   # API + MySQL + Redis on :8383
+#   docker compose --profile full up -d    # + studio (:3005) and admin console (:3006)
+#
+# The `full` profile pulls the pre-built studio / console images from GHCR.
+# Set PUBLIC_API_URL / PUBLIC_STUDIO_URL to the addresses your browser will use
+# (defaults assume everything runs on localhost).
 #
 # SQL_DSN / REDIS_CONN_STRING below override whatever is in .env so the API talks
 # to the bundled services. Change MYSQL_PASSWORD in one place: the `x-db` block.
@@ -14,8 +18,9 @@ x-db: &db
 
 services:
   api:
-    build: .
-    image: easytv-api:local
+    image: ghcr.io/easytv-ai/easytv-api:latest
+    # Building locally instead of pulling: uncomment the next line.
+    # build: .
     restart: unless-stopped
     env_file:
       - .env
@@ -55,6 +60,34 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis:/data
+
+  web:
+    image: ghcr.io/easytv-ai/easytv-web:latest
+    profiles: [full]
+    restart: unless-stopped
+    environment:
+      NUXT_PUBLIC_SITE_NAME: ${SITE_NAME:-EasyTV}
+      NUXT_PUBLIC_API_BASE_URL: ${PUBLIC_API_URL:-http://localhost:8383}
+      NUXT_PUBLIC_SITE_URL: ${PUBLIC_STUDIO_URL:-http://localhost:3005}
+      NUXT_PUBLIC_MEDIA_HOSTS: ${PUBLIC_MEDIA_HOSTS:-}
+      NUXT_PUBLIC_CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+    ports:
+      - "${WEB_PORT:-3005}:3005"
+    depends_on:
+      - api
+
+  manage:
+    image: ghcr.io/easytv-ai/easytv-manage:latest
+    profiles: [full]
+    restart: unless-stopped
+    environment:
+      NUXT_PUBLIC_SITE_NAME: ${SITE_NAME:-EasyTV}
+      NUXT_PUBLIC_API_BASE_URL: ${PUBLIC_API_URL:-http://localhost:8383}
+      NUXT_PUBLIC_STUDIO_URL: ${PUBLIC_STUDIO_URL:-http://localhost:3005}
+    ports:
+      - "${MANAGE_PORT:-3006}:3006"
+    depends_on:
+      - api
 
 volumes:
   mysql:

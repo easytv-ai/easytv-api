@@ -7,6 +7,8 @@
 [![CI](https://github.com/easytv-ai/easytv-api/actions/workflows/ci.yml/badge.svg)](https://github.com/easytv-ai/easytv-api/actions/workflows/ci.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/github/go-mod/go-version/easytv-ai/easytv-api)](go.mod)
+[![Release](https://img.shields.io/github/v/release/easytv-ai/easytv-api?include_prereleases&sort=semver)](https://github.com/easytv-ai/easytv-api/releases)
+[![Docker](https://img.shields.io/badge/ghcr.io-easytv--api-2496ED?logo=docker&logoColor=white)](https://github.com/easytv-ai/easytv-api/pkgs/container/easytv-api)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 [English](README.md) · [简体中文](README.zh-CN.md) · [API contract](API.md) · [Website](https://easytv.ai)
@@ -74,9 +76,24 @@ docker compose up -d
 curl http://localhost:8383/healthz
 ```
 
-Compose starts MySQL 8.4, Redis 7 and the API on port 8383. Uploads and logs
-persist in named volumes. The first start runs the database migration and
-creates the `admin` user with `ROOT_PASSWORD`.
+Compose pulls `ghcr.io/easytv-ai/easytv-api:latest` and starts MySQL 8.4,
+Redis 7 and the API on port 8383. Uploads and logs persist in named volumes.
+The first start runs the database migration and creates the `admin` user with
+`ROOT_PASSWORD`.
+
+Add the studio and the admin console (also pre-built images) with the `full`
+profile:
+
+```bash
+docker compose --profile full up -d     # studio on :3005, admin console on :3006
+```
+
+Set `PUBLIC_API_URL` / `PUBLIC_STUDIO_URL` in `.env` when the browser reaches
+the containers through another hostname. To build the API image locally
+instead of pulling it, uncomment `build: .` in `docker-compose.yml`.
+
+Images are published for `linux/amd64` and `linux/arm64`; tags follow releases
+(`1.2.3`, `1.2`, `1`) plus `latest` and `main`.
 
 ### From source
 
@@ -142,6 +159,10 @@ See [`.env.example`](.env.example) for the full annotated list.
 ## Deployment
 
 ### Binary + systemd
+
+Download a pre-built archive from the
+[Releases](https://github.com/easytv-ai/easytv-api/releases) page (Linux, macOS,
+Windows; amd64 and arm64) or build it yourself:
 
 ```bash
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o easytv-api .
@@ -223,8 +244,13 @@ setting/      typed accessors for the settings table
 tests/        HTTP-level smoke tests (sqlmock)
 ```
 
+CI runs gofmt, `go vet`, the race-enabled test suite and `govulncheck` on every
+push. Tagging `vX.Y.Z` publishes binaries with GoReleaser and multi-arch images
+to GHCR.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and commit
-conventions, [SECURITY.md](SECURITY.md) for reporting vulnerabilities and
+conventions, [SECURITY.md](SECURITY.md) for reporting vulnerabilities,
+[SUPPORT.md](SUPPORT.md) for where to ask questions and
 [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## Related Projects
