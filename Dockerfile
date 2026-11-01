@@ -13,7 +13,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X easytv-api/common.Version=${VERSION}" -o /out/easytv-api .
 
 # ---- runtime stage ---------------------------------------------------------
-FROM alpine:3.22
+FROM alpine:3.24
 LABEL org.opencontainers.image.title="easytv-api" \
       org.opencontainers.image.description="EasyTV backend: open-source AI short-drama studio" \
       org.opencontainers.image.source="https://github.com/easytv-ai/easytv-api" \
