@@ -80,45 +80,35 @@ func (s *OSSStorage) objectURL(key string) string {
 	return fmt.Sprintf("https://%s.%s/%s", s.Bucket, s.Endpoint, s.objectKey(key))
 }
 
-// Save 上传对象；长度未知时先落临时文件，才能带 Content-Length。
+// Save 上传对象；为了带 Content-Length，先落临时文件。
 func (s *OSSStorage) Save(key string, r io.Reader) (string, error) {
-	return s.SaveSize(key, r, -1)
-}
-
-// SaveSize 已知大小时直接把 reader 转给 OSS，不再落盘一次。
-func (s *OSSStorage) SaveSize(key string, r io.Reader, size int64) (string, error) {
 	if !isSafeKey(key) {
 		return "", errors.New("invalid storage key")
 	}
 	if s.KeyId == "" || s.KeySecret == "" {
 		return "", errors.New("OSS_ACCESS_KEY_ID / OSS_ACCESS_KEY_SECRET 未配置")
 	}
-	body := r
-	if size < 0 {
-		tmp, err := os.CreateTemp("", "easytv-oss-*")
-		if err != nil {
-			return "", err
-		}
-		defer func() {
-			_ = tmp.Close()
-			_ = os.Remove(tmp.Name())
-		}()
-		n, err := io.Copy(tmp, r)
-		if err != nil {
-			return "", err
-		}
-		if _, err := tmp.Seek(0, io.SeekStart); err != nil {
-			return "", err
-		}
-		body = tmp
-		size = n
+	tmp, err := os.CreateTemp("", "easytv-oss-*")
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = tmp.Close()
+		_ = os.Remove(tmp.Name())
+	}()
+	size, err := io.Copy(tmp, r)
+	if err != nil {
+		return "", err
+	}
+	if _, err := tmp.Seek(0, io.SeekStart); err != nil {
+		return "", err
 	}
 
 	contentType := mime.TypeByExtension(strings.ToLower(path.Ext(key)))
 	if contentType == "" {
 		contentType = "application/octet-stream"
 	}
-	req, err := http.NewRequest(http.MethodPut, s.objectURL(key), body)
+	req, err := http.NewRequest(http.MethodPut, s.objectURL(key), tmp)
 	if err != nil {
 		return "", err
 	}
@@ -135,8 +125,8 @@ func (s *OSSStorage) SaveSize(key string, r io.Reader, size int64) (string, erro
 	}
 	defer res.Body.Close()
 	if res.StatusCode >= 300 {
-		out, _ := io.ReadAll(io.LimitReader(res.Body, 2048))
-		return "", fmt.Errorf("oss put %d: %s", res.StatusCode, strings.TrimSpace(string(out)))
+		body, _ := io.ReadAll(io.LimitReader(res.Body, 2048))
+		return "", fmt.Errorf("oss put %d: %s", res.StatusCode, strings.TrimSpace(string(body)))
 	}
 	return s.BaseUrl + "/" + s.objectKey(key), nil
 }

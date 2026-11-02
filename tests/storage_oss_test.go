@@ -52,7 +52,7 @@ func TestOSSStorageSignAndUpload(t *testing.T) {
 	}
 	s.WithAPIBase(srv.URL)
 
-	url, err := s.SaveSize("2026/09/09/a.mp4", strings.NewReader("hello"), 5)
+	url, err := s.Save("2026/09/09/a.mp4", strings.NewReader("hello"))
 	if err != nil {
 		t.Fatalf("save: %v", err)
 	}

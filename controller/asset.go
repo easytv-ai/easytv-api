@@ -95,12 +95,7 @@ func UploadAsset(c *gin.Context) {
 	defer src.Close()
 
 	key := service.NewStorageKey(filename)
-	var url string
-	if oss, ok := service.DefaultStorage.(*service.OSSStorage); ok && header.Size > 0 {
-		url, err = oss.SaveSize(key, src, header.Size)
-	} else {
-		url, err = service.DefaultStorage.Save(key, src)
-	}
+	url, err := service.DefaultStorage.Save(key, src)
 	if err != nil {
 		common.SysError("asset save failed: " + err.Error())
 		common.ApiErrorMsg(c, "文件保存失败")
