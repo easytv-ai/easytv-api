@@ -10,6 +10,7 @@ Thanks for using EasyTV! Here is where to go for what.
 | Report a security vulnerability | [SECURITY.md](SECURITY.md) — never a public issue |
 | Read the docs | [README](README.md) · [简体中文](README.zh-CN.md) · [website](https://easytv.ai) |
 | Try it without installing | [easytv.ai](https://www.easytv.ai) |
+| Buy a commercial license (closed-source / SaaS without AGPL obligations) | [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md) · email [leida@easyapi.com](mailto:leida@easyapi.com) with `[LICENSE] easytv-api` |
 
 Before asking, please search existing issues and discussions. When reporting a
 problem, include the commit or version you run, how you deployed it, and logs

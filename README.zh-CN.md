@@ -6,6 +6,7 @@
 
 [![CI](https://github.com/easytv-ai/easytv-api/actions/workflows/ci.yml/badge.svg)](https://github.com/easytv-ai/easytv-api/actions/workflows/ci.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![License: Commercial](https://img.shields.io/badge/License-Commercial-orange.svg)](COMMERCIAL-LICENSE.zh-CN.md)
 [![Go](https://img.shields.io/github/go-mod/go-version/easytv-ai/easytv-api)](go.mod)
 [![Release](https://img.shields.io/github/v/release/easytv-ai/easytv-api?include_prereleases&sort=semver)](https://github.com/easytv-ai/easytv-api/releases)
 [![Docker](https://img.shields.io/badge/ghcr.io-easytv--api-2496ED?logo=docker&logoColor=white)](https://github.com/easytv-ai/easytv-api/pkgs/container/easytv-api)
@@ -218,6 +219,15 @@ tests/        HTTP 级冒烟测试（sqlmock）
 
 ## 开源协议
 
-EasyTV API 以 [GNU Affero General Public License v3.0](LICENSE) 发布。
+EasyTV API 采用 **AGPL + 商业** 双许可：
 
-用户、支付与对象存储模块的结构参考了 [New API](https://github.com/QuantumNous/new-api)（源自 [One API](https://github.com/songquanpeng/one-api)），二者同为 AGPL-3.0。再分发时请保留此署名。
+| 你想… | 用这份 |
+| --- | --- |
+| 学习、修改或自建部署，并遵守 AGPL-3.0（把修改版作为网络服务提供给他人时，须公开对应源代码） | [GNU Affero GPL v3.0](LICENSE) |
+| 做闭源产品，或以 SaaS / 白标托管修改版，且**不想**承担上述 AGPL 义务 | [商业许可协议](COMMERCIAL-LICENSE.zh-CN.md) |
+
+仓库里的商业条款是模板，双方签署订单后才生效。写信到
+[leida@easyapi.com](mailto:leida@easyapi.com)，主题加 `[LICENSE] easytv-api`。
+[English terms](COMMERCIAL-LICENSE.md) 是准据文本。
+
+用户、支付与对象存储模块的结构参考了 [New API](https://github.com/QuantumNous/new-api)（源自 [One API](https://github.com/songquanpeng/one-api)），二者同为 AGPL-3.0。再分发时请保留此署名。商业许可**不能**改变这些源自 New API / One API 的部分。

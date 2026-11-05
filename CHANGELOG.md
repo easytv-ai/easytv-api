@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   GitHub Actions CI.
 - Added `GET /healthz` liveness endpoint for container orchestrators.
 - Added `Dockerfile` and `docker-compose.yml` (API + MySQL + Redis) for one-command self-hosting.
+- Dual licensing: AGPL-3.0 remains the public license; [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md) (and [zh-CN](COMMERCIAL-LICENSE.zh-CN.md)) is the commercial template for closed-source / SaaS use. New API / One API derived modules stay AGPL.
 
 ### Changed
 

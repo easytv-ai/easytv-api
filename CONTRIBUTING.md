@@ -124,8 +124,15 @@ sync when you change behavior. The API contract in `API.md` is Chinese.
 
 ## License
 
-By contributing you agree that your contributions will be licensed under the
-[GNU Affero General Public License v3.0](LICENSE), the same license that
-covers the project. You confirm that you have the right to submit the work
-under that license (see the
-[Developer Certificate of Origin](https://developercertificate.org/)).
+By contributing you agree that your contributions are licensed under the
+[GNU Affero General Public License v3.0](LICENSE), the same public license
+that covers the project.
+
+You also grant the EasyTV copyright holders a perpetual, irrevocable,
+worldwide, royalty-free license to relicense your contribution under the
+[EasyTV Commercial License](COMMERCIAL-LICENSE.md) (or successor commercial
+terms). That grant is what lets the project stay dual-licensed. You are not
+owed a share of commercial fees.
+
+You confirm that you have the right to submit the work under those terms
+(see the [Developer Certificate of Origin](https://developercertificate.org/)).

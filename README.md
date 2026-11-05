@@ -6,6 +6,7 @@
 
 [![CI](https://github.com/easytv-ai/easytv-api/actions/workflows/ci.yml/badge.svg)](https://github.com/easytv-ai/easytv-api/actions/workflows/ci.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![License: Commercial](https://img.shields.io/badge/License-Commercial-orange.svg)](COMMERCIAL-LICENSE.md)
 [![Go](https://img.shields.io/github/go-mod/go-version/easytv-ai/easytv-api)](go.mod)
 [![Release](https://img.shields.io/github/v/release/easytv-ai/easytv-api?include_prereleases&sort=semver)](https://github.com/easytv-ai/easytv-api/releases)
 [![Docker](https://img.shields.io/badge/ghcr.io-easytv--api-2496ED?logo=docker&logoColor=white)](https://github.com/easytv-ai/easytv-api/pkgs/container/easytv-api)
@@ -264,10 +265,21 @@ conventions, [SECURITY.md](SECURITY.md) for reporting vulnerabilities,
 
 ## License
 
-EasyTV API is released under the
-[GNU Affero General Public License v3.0](LICENSE).
+EasyTV API is **dual-licensed**:
+
+| You want to… | Use |
+| --- | --- |
+| Study, modify, or self-host and you will follow AGPL-3.0 (including publishing corresponding source if you offer a modified version as a network service) | [GNU Affero GPL v3.0](LICENSE) |
+| Ship a closed-source product, or host a modified version as SaaS / white-label **without** those AGPL obligations | [Commercial License](COMMERCIAL-LICENSE.md) |
+
+The commercial terms in the repo are a template. They apply only after you and
+the EasyTV copyright holders sign an Order. Write to
+[leida@easyapi.com](mailto:leida@easyapi.com) with `[LICENSE] easytv-api` in
+the subject. [简体中文译本](COMMERCIAL-LICENSE.zh-CN.md) is provided for
+convenience; the English text governs.
 
 Parts of the user, payment and object-storage modules follow the structure of
 [New API](https://github.com/QuantumNous/new-api) (itself derived from
 [One API](https://github.com/songquanpeng/one-api)), both AGPL-3.0. Keep this
-attribution when redistributing.
+attribution when redistributing. A commercial license does **not** relicense
+those New API / One API derived parts.
