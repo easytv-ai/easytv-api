@@ -215,6 +215,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/subtitle/translate", middleware.UserCriticalRateLimit("translate"), controller.TranslateSubtitle)
 				selfRoute.POST("/canvas/:id/compose", middleware.UserCriticalRateLimit("compose"), controller.CreateCompose)
 				selfRoute.GET("/canvas/:id/shots", controller.GetMyCanvasShots)
+				selfRoute.GET("/canvas/:id/node-candidates", controller.GetMyNodeCandidates)
 				selfRoute.GET("/canvas/:id/timeline", controller.GetMyCanvasTimeline)
 				selfRoute.PUT("/canvas/:id/timeline", controller.SaveMyCanvasTimeline)
 				selfRoute.POST("/canvas/:id/timeline/lock", controller.LockMyCanvasTimeline)

@@ -142,6 +142,9 @@ type CreationMetrics struct {
 		ByType       []RetryTypeStat `json:"by_type"`
 	} `json:"retries"`
 
+	// Rerolls 抽卡：节点要几条成功结果才留用一条、被顶替的结果花了多少积分（API.md 39.3）
+	Rerolls *RerollMetrics `json:"rerolls"`
+
 	RefMissing struct {
 		Events int64 `json:"events"`
 		Items  int64 `json:"items"`
@@ -280,6 +283,13 @@ func BuildCreationMetrics(days, idleMinutes int, now time.Time) (*CreationMetric
 	m.Retries.Nodes, m.Retries.Tasks, m.Retries.AvgPerNode, m.Retries.RetriedNodes = rs.Nodes, rs.Tasks, rs.AvgPerNode, rs.RetriedNodes
 	m.Retries.RetriedRate = Rate(rs.RetriedNodes, rs.Nodes)
 	m.Retries.Buckets, m.Retries.ByType = rs.Buckets, rs.ByType
+
+	// ---- 抽卡（成功后再生成） ----
+	rerolls, err := BuildRerollMetrics(from, to)
+	if err != nil {
+		return nil, err
+	}
+	m.Rerolls = rerolls
 
 	// ---- 引用丢失 ----
 	var refRows []RefMissingRow

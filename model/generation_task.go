@@ -12,15 +12,19 @@ import (
 
 // GenerationTask 生成任务：一次模型调用的完整生命周期。见 API.md 1.4。
 type GenerationTask struct {
-	Id             int    `json:"id" gorm:"comment:任务ID"`
-	TaskNo         string `json:"task_no" gorm:"type:varchar(32);uniqueIndex;comment:对外任务单号"`
-	UserId         int    `json:"user_id" gorm:"index;comment:发起用户ID"`
-	ProjectId      int    `json:"project_id" gorm:"default:0;comment:所属项目ID"`
-	CanvasId       int    `json:"canvas_id" gorm:"index;index:idx_task_canvas_node,priority:1;default:0;comment:所属画布ID"`
-	NodeId         string `json:"node_id" gorm:"type:varchar(64);index:idx_task_canvas_node,priority:2;default:'';comment:画布节点ID"`
-	SkillId        int    `json:"skill_id" gorm:"index;default:0;comment:使用的技能 ID（T26 作者分成）"`
-	ParentTaskId   int    `json:"parent_task_id" gorm:"index;default:0;comment:续写来源任务（F4）"`
-	RetakeOf       int    `json:"retake_of" gorm:"index;default:0;comment:重拍 / 超分来源任务（F4）"`
+	Id           int    `json:"id" gorm:"comment:任务ID"`
+	TaskNo       string `json:"task_no" gorm:"type:varchar(32);uniqueIndex;comment:对外任务单号"`
+	UserId       int    `json:"user_id" gorm:"index;comment:发起用户ID"`
+	ProjectId    int    `json:"project_id" gorm:"default:0;comment:所属项目ID"`
+	CanvasId     int    `json:"canvas_id" gorm:"index;index:idx_task_canvas_node,priority:1;default:0;comment:所属画布ID"`
+	NodeId       string `json:"node_id" gorm:"type:varchar(64);index:idx_task_canvas_node,priority:2;default:'';comment:画布节点ID"`
+	SkillId      int    `json:"skill_id" gorm:"index;default:0;comment:使用的技能 ID（T26 作者分成）"`
+	ParentTaskId int    `json:"parent_task_id" gorm:"index;default:0;comment:续写来源任务（F4）"`
+	RetakeOf     int    `json:"retake_of" gorm:"index;default:0;comment:重拍 / 超分来源任务（F4）"`
+	// RerollOf 同一画布节点上被这次生成顶替的上一条成功任务（0 = 该节点第一次出结果），服务端自动填（API.md 39.1）
+	RerollOf int `json:"reroll_of" gorm:"index;default:0;comment:重抽：被顶替的上一条成功任务"`
+	// RerollReason 用户重抽时选的不满意原因，逗号分隔（API.md 39.1）
+	RerollReason   string `json:"reroll_reason" gorm:"type:varchar(120);default:'';comment:重抽原因，逗号分隔"`
 	Lang           string `json:"lang" gorm:"type:varchar(10);default:'';comment:多语言配音 / 字幕语种（F5）"`
 	Type           string `json:"type" gorm:"type:varchar(20);index;comment:类型：text/image/video/audio"`
 	Provider       string `json:"provider" gorm:"type:varchar(50);default:'';comment:厂商"`
@@ -174,6 +178,21 @@ func GetTasks(filter TaskFilter, pageInfo *common.PageInfo) (list []*GenerationT
 	return list, total, err
 }
 
+// RerollReasons 重抽原因白名单（API.md 39.1）：审片退回原因 + 生成侧特有的两项。
+var RerollReasons = append(append([]string{}, ShotReviewReasons...), "style", "off_prompt")
+
+// LatestSucceededNodeTaskId 画布节点上同类型最近一条成功任务的 id，没有返回 0。
+func LatestSucceededNodeTaskId(canvasId int, nodeId, taskType string) int {
+	if canvasId <= 0 || nodeId == "" {
+		return 0
+	}
+	var id int
+	DB.Model(&GenerationTask{}).Select("id").
+		Where("canvas_id = ? AND node_id = ? AND type = ? AND status = ?", canvasId, nodeId, taskType, TaskStatusSucceeded).
+		Order("id desc").Limit(1).Scan(&id)
+	return id
+}
+
 // NodeCandidate 某个画布节点生成成功过的产物（镜头候选，见 API.md 12.1）。
 type NodeCandidate struct {
 	TaskId    int     `json:"task_id"`
@@ -185,6 +204,8 @@ type NodeCandidate struct {
 	Model     string  `json:"model"`
 	Prompt    string  `json:"prompt"`
 	CreatedAt int64   `json:"created_at"`
+	// Type 任务类型，节点候选接口（API.md 39.2）用
+	Type string `json:"type"`
 	// Review 审片结论（API.md 25.5），nil = 待审
 	Review *ShotReview `json:"review,omitempty" gorm:"-"`
 }
@@ -197,7 +218,7 @@ func GetNodeCandidates(userIds []int, canvasId int, nodeIds []string, perNode in
 	}
 	var rows []NodeCandidate
 	err := DB.Table("generation_task AS t").
-		Select("t.id AS task_id, t.node_id, t.result_asset_id AS asset_id, a.url, a.cover_url, a.duration, t.model, t.prompt, t.finished_at AS created_at").
+		Select("t.id AS task_id, t.node_id, t.result_asset_id AS asset_id, a.url, a.cover_url, a.duration, t.model, t.prompt, t.finished_at AS created_at, t.type").
 		Joins("JOIN asset AS a ON a.id = t.result_asset_id AND a.deleted_at IS NULL").
 		Where("t.user_id IN ? AND t.canvas_id = ? AND t.node_id IN ? AND t.status = ? AND t.result_asset_id > 0", userIds, canvasId, nodeIds, TaskStatusSucceeded).
 		Order("t.id desc").Limit(len(nodeIds) * perNode * 2).Scan(&rows).Error

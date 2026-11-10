@@ -293,3 +293,16 @@ func BuildCharacterMedia(cv *model.Canvas) []ShotMedia {
 	}
 	return out
 }
+
+// NodeCandidates 画布节点的历史成功结果（API.md 39.2），带审片结论；没有结果的节点不在返回里。
+func NodeCandidates(cv *model.Canvas, nodeIds []string) map[string][]model.NodeCandidate {
+	candidates, _ := model.GetNodeCandidates(canvasAssetOwners(cv), cv.Id, nodeIds, shotCandidatesPerNode)
+	if reviews, err := model.GetShotReviews(cv.Id); err == nil && len(reviews) > 0 {
+		for nodeId := range candidates {
+			for i := range candidates[nodeId] {
+				candidates[nodeId][i].Review = reviews[candidates[nodeId][i].AssetId]
+			}
+		}
+	}
+	return candidates
+}

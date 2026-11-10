@@ -50,6 +50,8 @@ func RetakeMyTask(c *gin.Context) {
 		Prompt string          `json:"prompt"`
 		Params json.RawMessage `json:"params"`
 		Model  string          `json:"model"`
+		// RerollReason 不满意原因（API.md 39.1）
+		RerollReason []string `json:"reroll_reason"`
 	}
 	_ = common.DecodeJson(c.Request.Body, &req)
 	modelName := strings.TrimSpace(req.Model)
@@ -71,6 +73,7 @@ func RetakeMyTask(c *gin.Context) {
 		Prompt: prompt, Params: mergeTaskParams(src.Params, req.Params), Inputs: src.Inputs, Lang: src.Lang,
 		RetakeOf: src.Id,
 	}
+	service.MarkReroll(task, req.RerollReason)
 	service.Track(src.UserId, "node_retake", map[string]any{"task_id": src.Id, "model": modelName})
 	if !resolveTaskTeam(c, task) {
 		return

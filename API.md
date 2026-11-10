@@ -2672,3 +2672,46 @@ seedance 曾因网关账户欠费（402「预估扣费 $0.61，当前余额 $-0.
 后台任务 `RunGatewayBalanceAlert`（与模型健康提醒同一循环：每 6 小时，启动 5 分钟后先跑一次；`WORKER_TAG` 联调实例不跑）：`unlimited` 时不巡检；余额低于 setting `GatewayBalanceAlertUSD`（默认 20，≤0 关闭）时给所有启用的管理员发 `system` 站内通知（欠费时标题为「网关已欠费 $x，生成任务正在失败」），24 小时内不重复（setting `GatewayBalanceAlertNotifiedAt`）；余额回到阈值以上即清记录，再低会马上提醒。
 
 前端约定：管理端定价页顶部一张卡：「网关余额 $x · 累计用量 $y」，`low=true` 标红；`unlimited=true` 时提示「令牌不限额，看不到账户余额，到系统设置 · 网关填访问令牌」。
+
+## 39. 少抽卡：重抽血缘、历史结果找回、留用率（2026-11-10）
+
+同行反馈：模型单价不是核心，「几次才能出一条能用的」才是。这一节把抽卡变成可度量、可定向、可回退的事：记下每次重抽顶替了谁、嫌它哪里不好；旧结果随时能找回；按模型给出留用率。失败任务全额退分，不算抽卡——这里只看**成功后又生成**。
+
+### 39.1 重抽血缘与原因
+
+- `generation_task` 新增两列（AutoMigrate）：`reroll_of int`（同一画布节点、同类型被这次顶替的上一条成功任务，0 = 该节点第一次出结果）、`reroll_reason varchar(120)`（逗号分隔）。任务视图同名输出。
+- `reroll_of` 由服务端自动填，前端不传：`POST /user/task` 与 `POST /user/task/:id/retake` 提交时查该节点最近一条成功的同类型任务。续写（`parent_task_id > 0`）、文本任务、没挂画布节点的任务不记。
+- 两个接口的请求体新增可选 `reroll_reason: string[]`，只在 `reroll_of > 0` 时落库，白名单外的值丢弃：
+  `identity`（人物 / 主体不对）、`performance`（动作表演）、`lipsync`（口型）、`composition`（构图镜头）、`continuity`（连戏）、`duration`（时长节奏）、`technical`（畸变 / 画质）、`style`（风格不对）、`off_prompt`（没按描述来）。前七个与审片退回原因（25.5）同码。
+- 原因只做记录与统计，服务端不改提示词；怎么对症调整由创作台在提交前引导（见前端约定）。
+
+### 39.2 节点历史结果
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/user/canvas/:id/node-candidates?node_ids=a,b` | 画布可读即可（队友只读也行）。`node_ids` 逗号分隔，1–50 个。返回 `{ candidates: { "<node_id>": [{ task_id, node_id, asset_id, url, cover_url, duration, model, prompt, type, created_at, review? }] } }`，新的在前，每个节点最多 8 条；产物资产已删的不返回；没有结果的节点不在对象里 |
+
+结构与镜头视图的 `candidates`（12.1）相同，多一个 `type`。前端把节点切回某条历史结果只改节点的 `assetId / content`，不产生任务、不扣分。
+
+### 39.3 创作指标 `rerolls`
+
+`GET /admin/stats/creation` 新增 `rerolls`，口径：窗口内创建、已成功、挂在画布节点上的图片 / 视频 / 音频任务（不含续写）。
+
+- `nodes` 出过结果的节点数；`succeeded` 成功任务数；`avg_per_node` 每节点平均成功条数。
+- `first_pass_nodes / first_pass_rate`：只出了一条成功结果的节点（一次留用）与占比（百分比 0–100）。
+- `spent_points` 这些任务的积分；`wasted_points` 其中被顶替掉的结果花的积分（每节点总积分 − 最后一条的积分）；`wasted_rate`。
+- `by_type`：分类型的 `nodes / first_pass_nodes / first_pass_rate / avg_per_node`。
+- `by_model`：`{ model, type, total, rerolled, keep_rate, pulls_per_keep }`。`rerolled` = 该模型的成功结果里，后来同节点又出了新成功结果的条数；`keep_rate` = 留用率；`pulls_per_keep` = `total / (total − rerolled)`，一条都没留用时为 null。按 `total` 倒序。
+- `reasons`：`reroll_reason` 各原因次数（倒序）；`reason_tasks` 带原因的重抽任务数（最多扫 5000 条）。
+- 局限：最后一条结果一律算「留用」，用户放弃的节点也算在内；一次出多张（前端拆成兄弟节点）不算重抽。
+
+### 39.4 模型列表上的留用率
+
+`GET /generation/models` 每行新增 `recent_keep_total`（近 30 天成功的节点任务数）、`recent_keep_rate`（留用率百分比）、`recent_pulls_per_keep`（平均几条换一条留用）。样本 < 10 或一条都没留用时三个字段都是 0，前端不展示。服务端缓存 30 分钟。
+
+### 39.5 前端约定
+
+- 节点已有结果时再点生成 = 重抽：先让用户点「哪里不满意」（可跳过、可设不再询问），原因随任务提交；每个原因给一条对症建议（换参考 / 主体、改提示词、片段重拍、智能编辑、换时长等），用户可以改走局部修复而不是整条重抽。
+- 节点上能看历史结果并切回。
+- 模型下拉展示留用率；`recent_keep_total = 0` 不展示。
+- 图生视频 / 首尾帧模式缺首帧时提交前拦下；时长 / 分辨率被改档时提示。

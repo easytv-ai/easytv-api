@@ -43,6 +43,8 @@ func taskView(t *model.GenerationTask) map[string]any {
 		"skill_id":        t.SkillId,
 		"parent_task_id":  t.ParentTaskId,
 		"retake_of":       t.RetakeOf,
+		"reroll_of":       t.RerollOf,
+		"reroll_reason":   t.RerollReason,
 		"lang":            t.Lang,
 		"type":            t.Type,
 		"provider":        t.Provider,
@@ -74,6 +76,7 @@ func GetGenerationModels(c *gin.Context) {
 		priceByModel[p.Model] = p
 	}
 	health := service.CachedModelHealth()
+	keep := service.CachedModelKeep()
 	items := make([]gin.H, 0, len(models))
 	for _, m := range models {
 		item := gin.H{
@@ -114,6 +117,11 @@ func GetGenerationModels(c *gin.Context) {
 				item["recent_fail_rate"] = *h.FailRate
 			}
 			item["recent_warn"] = h.Warn
+		}
+		// 近 30 天留用率（API.md 39.4）：成功结果里没被同节点新结果顶替的占比；样本不够时 recent_keep_total=0
+		item["recent_keep_total"], item["recent_keep_rate"], item["recent_pulls_per_keep"] = 0, 0.0, 0.0
+		if k := keep[m.Model]; k != nil {
+			item["recent_keep_total"], item["recent_keep_rate"], item["recent_pulls_per_keep"] = k.Total, k.KeepRate, k.PullsPerKeep
 		}
 		if p := priceByModel[m.Model]; p != nil {
 			item["unit"] = p.Unit
@@ -163,6 +171,8 @@ func CreateTask(c *gin.Context) {
 		SubjectVersions map[string]int `json:"subject_versions"`
 		Lang            string         `json:"lang"`
 		Voice           string         `json:"voice"`
+		// RerollReason 节点已有结果、用户重抽时选的不满意原因（API.md 39.1），只做记录
+		RerollReason []string `json:"reroll_reason"`
 	}
 	if err := common.DecodeJson(c.Request.Body, &req); err != nil {
 		common.ApiErrorMsg(c, "无效的参数")
@@ -325,6 +335,7 @@ func CreateTask(c *gin.Context) {
 		Inputs:    inputsJSON,
 		Lang:      lang,
 	}
+	service.MarkReroll(task, req.RerollReason)
 	launchTask(c, task, provider)
 }
 

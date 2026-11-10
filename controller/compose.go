@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"easytv-api/common"
 	"easytv-api/model"
@@ -80,6 +81,31 @@ func GetMyCanvasShots(c *gin.Context) {
 		return
 	}
 	common.ApiSuccess(c, gin.H{"shots": shots, "characters": service.BuildCharacterMedia(cv)})
+}
+
+// GetMyNodeCandidates GET /user/canvas/:id/node-candidates?node_ids=a,b：画布节点生成成功过的历史结果，
+// 新的在前，每个节点最多 8 条（API.md 39.2）。重抽后旧结果还能找回来，不必为「还是上一张好」再抽。
+func GetMyNodeCandidates(c *gin.Context) {
+	cv, _, err := service.CanvasAccess(c.GetInt("id"), paramInt(c, "id"))
+	if err != nil {
+		respondModelError(c, err, "查询画布失败")
+		return
+	}
+	nodeIds := []string{}
+	for _, v := range strings.Split(c.Query("node_ids"), ",") {
+		if v = strings.TrimSpace(v); v != "" && len(v) <= 64 {
+			nodeIds = append(nodeIds, v)
+		}
+	}
+	if len(nodeIds) == 0 {
+		common.ApiErrorMsg(c, "请指定节点")
+		return
+	}
+	if len(nodeIds) > 50 {
+		common.ApiErrorMsg(c, "一次最多查 50 个节点")
+		return
+	}
+	common.ApiSuccess(c, gin.H{"candidates": service.NodeCandidates(cv, nodeIds)})
 }
 
 // GetMyCanvasTimeline GET /user/canvas/:id/timeline：时间线与镜头视图一起返回；没保存过给缺省时间线（version=0）。
