@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Campaign 活动（T33）：投稿墙 + 榜单 + 按名次发奖。
+// Campaign 活动：投稿墙 + 榜单 + 按名次发奖。
 type Campaign struct {
 	Id           int            `json:"id"`
 	Title        string         `json:"title" gorm:"type:varchar(100)"`

@@ -11,7 +11,7 @@ import (
 	"easytv-api/model"
 )
 
-// ===== 分镜组拼接（L4，API.md 23.3 montage）=====
+// ===== 分镜组拼接（API.md 23.3 montage）=====
 
 func TestParseMontageParams(t *testing.T) {
 	ids := func(n int) []any {

@@ -176,7 +176,7 @@ func TestGetCanvasAgentPlanReadsSteps(t *testing.T) {
 	}
 }
 
-// TestAgentRoutesRegistered 三个新路由都注册在登录态后面。
+// TestAgentRoutesRegistered 三个路由都注册在登录态后面。
 func TestAgentRoutesRegistered(t *testing.T) {
 	initMockDB(t)
 	r := initTestRouter()

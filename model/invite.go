@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 邀请关系查询（T12）。奖励流水记在 promoter_bill：
+// 邀请关系查询。奖励流水记在 promoter_bill：
 // biz_type 1（注册返）= 被邀请人完成首条视频后给邀请人的积分，from_user_id 为被邀请人；
 // biz_type 2（充值返）= 被邀请人首充后按比例给邀请人的积分，source_no 为订单号；
 // biz_type 6（返利作废）= 退款冲回，amount 为负。amount 单位一律为积分。

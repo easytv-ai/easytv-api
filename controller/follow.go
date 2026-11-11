@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 关注与榜单（API.md 9.2，M11）=====
+// ===== 关注与榜单（API.md 9.2）=====
 
 // ToggleFollowAuthor POST /user/author/:id/follow
 func ToggleFollowAuthor(c *gin.Context) {

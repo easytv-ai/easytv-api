@@ -126,7 +126,7 @@ func RefundChatQuotaOn(userId int, day string) error {
 //
 // free 只能由服务端在建任务时写入，客户端不许自报：所有接受客户端 params 的建任务入口
 // （controller/task.go 的 CreateTask、service.CreateBatch）都过 CheckNoClientAgentParams
-// 挡住自带的 params.agent / params.chat（复核发现 high）；画布入口由 NewAgentTask /
+// 挡住自带的 params.agent / params.chat；画布入口由 NewAgentTask /
 // NewAgentRetryTask 写 agent.free，导演入口由 NewDirectorChatTask 写 chat.free，
 // 通用重试由 RewriteChatFreeFlag 按当前开关重估。
 // 创建后只按落库的 free 判定：结算与退款必须用这个口径，不能读实时开关，
@@ -158,9 +158,9 @@ var ErrClientChatParams = errors.New("导演对话任务只能通过对话接口
 // CheckNoClientAgentParams 校验 params 里没有客户端自带的非空 agent 对象（免积分标记只能由服务端写）。
 // 所有接受客户端 params 的建任务入口（通用建任务 controller.CreateTask、服务端批量编排 CreateBatch……）
 // 都必须先过这一关：params 是原样透传的，而 IsFreeChatTask 只看 params.agent.free——放行的话，
-// 任何登录用户自带 free=true 就能走免积分分支（跳过估价与预扣，ChatFreeEnabled=false 时也免单，复核发现 high）。
+// 任何登录用户自带 free=true 就能走免积分分支（跳过估价与预扣，ChatFreeEnabled=false 时也免单）。
 // 键名匹配必须与 encoding/json 的结构体解码同语义（大小写不敏感，Agent / AGENT 都算 agent 段，
-// 否则 {"Agent":{"max_rounds":8}} 会绕过闸门：IsAgentTask 认得它并按 8 轮跑，计价却只按 1 轮，复核发现 medium）。
+// 否则 {"Agent":{"max_rounds":8}} 会绕过闸门：IsAgentTask 认得它并按 8 轮跑，计价却只按 1 轮）。
 // agent 不存在 / 是空对象 / 不是对象 / 非 JSON 对象都不拦，交给各入口自己的参数校验。
 func CheckNoClientAgentParams(params string) error {
 	var p map[string]json.RawMessage
@@ -185,8 +185,8 @@ func CheckNoClientAgentParams(params string) error {
 }
 
 // RewriteChatFreeFlag 按当前开关重估 agent 任务参数里的 free 标记（通用重试专用，与 NewAgentRetryTask 同口径）：
-// 源任务带 params.agent 时 free 不能照抄旧值，否则运营关掉 ChatFreeEnabled 后重试旧的免积分任务仍然免单
-// （复核发现 medium）。free 一律改成传入值（调用方传 setting.IsChatFreeEnabled()），其余 params 原样保留；
+// 源任务带 params.agent 时 free 不能照抄旧值，否则运营关掉 ChatFreeEnabled 后重试旧的免积分任务仍然免单。
+// free 一律改成传入值（调用方传 setting.IsChatFreeEnabled()），其余 params 原样保留；
 // 没有 agent 段 / agent 不是对象时原样返回。键名匹配与 encoding/json 的结构体解码同语义（大小写不敏感），
 // 并把 agent / free 统一成规范小写键，避免新旧两份并存。free 只能由服务端写入，
 // 客户端自报的入口已在各建任务入口（CreateTask / CreateBatch）用 CheckNoClientAgentParams 挡住。
@@ -197,7 +197,7 @@ func RewriteChatFreeFlag(params string, free bool) string {
 
 // WriteChatQuotaDay 把「这次是否真的消费了次数、消费的是哪一天」落进 params.agent.quota_day：
 // 消费了写消费日（yyyy-mm-dd），没消费（会员 / 不限次配置）写空串。退次数只认这个标记（见 ChatQuotaDayOf），
-// 否则会员期间建的免费任务失败时会把此前非会员时用掉的次数退回去（复核发现 medium）。
+// 否则会员期间建的免费任务失败时会把此前非会员时用掉的次数退回去。
 // 没有 agent 段 / agent 不是对象时原样返回。
 func WriteChatQuotaDay(params string, day string) string {
 	day = strings.TrimSpace(day)

@@ -14,7 +14,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-// 短剧复审（2026-09-15）回归用例：由 review-evidence/2026-09-15/drama_review_test.go 改造而来。
+// 短剧复审（2026-09-15，API.md 24）回归用例。
 // D01 配音变长不能把已裁掉的画面带回来；D02 改稿同步画布；D04 同一素材多次使用；D06 短片段字幕；D07 BGM 音量 0。
 
 // TestReviewTrimWithLongVoice D01：源视频「红 1 秒 + 蓝 2 秒」，选 0~1 秒，加 2 秒配音：

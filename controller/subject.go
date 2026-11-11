@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 主体库（API.md 10.2，F2）=====
+// ===== 主体库（API.md 10.2）=====
 
 // GetMySubjects GET /user/subject?kind=&keyword=&page
 // 个人空间只列自己 team_id=0 的主体；团队空间列该团队的全部主体（API.md 20）。
@@ -141,7 +141,7 @@ func UpdateMySubject(c *gin.Context) {
 	if req.Prompt != nil {
 		fields["prompt"] = trimLimit(*req.Prompt, 1000)
 	}
-	// shared 不再可改：主体的团队归属在创建时由空间决定（API.md 20），这里忽略请求里的 shared
+	// shared 不可改：主体的团队归属在创建时由空间决定（API.md 20），这里忽略请求里的 shared
 	if req.CoverAssetId != nil {
 		if *req.CoverAssetId <= 0 {
 			fields["cover_asset_id"], fields["cover_url"] = 0, ""

@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Subject 主体库（F2）：角色 / 场景 / 道具，带参考图，画布与成片里可引用以保持一致性。
+// Subject 主体库：角色 / 场景 / 道具，带参考图，画布与成片里可引用以保持一致性。
 type Subject struct {
 	Id           int    `json:"id"`
 	UserId       int    `json:"user_id" gorm:"index"`

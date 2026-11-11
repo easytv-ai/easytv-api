@@ -9,7 +9,7 @@ import (
 )
 
 // UserPreference 用户偏好（API.md 33）：一人一键一行，值是前端自定义的 JSON 文本。
-// 第一批用户是运镜库的「收藏 / 最近」——原来只存 localStorage，换台电脑就没了。
+// 首个使用方是运镜库的「收藏 / 最近」：只存 localStorage 的话换台电脑就没了。
 type UserPreference struct {
 	Id        int    `json:"id"`
 	UserId    int    `json:"user_id" gorm:"uniqueIndex:idx_user_preference_user_key,priority:1;comment:用户ID"`

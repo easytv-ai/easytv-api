@@ -6,7 +6,7 @@ import (
 	"easytv-api/common"
 )
 
-// 榜单（M11）：作品榜按窗口内点赞数，作者榜按窗口内被赞数，技能榜按窗口内调用数。
+// 榜单：作品榜按窗口内点赞数，作者榜按窗口内被赞数，技能榜按窗口内调用数。
 
 // RankPeriodSince 周榜 / 月榜的起点。
 func RankPeriodSince(period string) int64 {

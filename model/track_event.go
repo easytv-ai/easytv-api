@@ -8,7 +8,7 @@ import (
 	"easytv-api/common"
 )
 
-// TrackEvent 增长事件（T1）：前端 POST /track 与服务端业务流程共同写入，漏斗与渠道归因从这张表出。
+// TrackEvent 增长事件：前端 POST /track 与服务端业务流程共同写入，漏斗与渠道归因从这张表出。
 // 只增不改；props 为小 JSON（≤ 2KB），大对象不要往里塞。
 type TrackEvent struct {
 	Id        int64  `json:"id"`
@@ -52,7 +52,7 @@ type Attribution struct {
 	Campaign  string `json:"campaign"`
 	AffCode   string `json:"ref"`
 	BonusCode string `json:"code"`
-	// PartnerCode 渠道伙伴专属码（?pcode=，M12）
+	// PartnerCode 渠道伙伴专属码（?pcode=）
 	PartnerCode string `json:"pcode"`
 	AnonId      string `json:"anon_id"`
 }

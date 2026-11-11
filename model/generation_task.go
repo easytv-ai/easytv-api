@@ -400,14 +400,14 @@ func GetStaleTasks(pendingBefore, runningBefore int64, limit int) (list []*Gener
 }
 
 // GetUnrefundedTasks 已失败 / 已取消但预扣积分还没退回的任务（退款补偿用）。
-// 置终态与退款现在同一事务提交，这里兜的是历史数据与进程在两步之间崩溃的情况。
+// 置终态与退款在同一事务提交，这里兜的是历史数据与进程在两步之间崩溃的情况。
 func GetUnrefundedTasks(limit int) (list []*GenerationTask, err error) {
 	err = DB.Where("status IN ? AND points_frozen > 0", []string{TaskStatusFailed, TaskStatusCancelled}).
 		Order("id asc").Limit(limit).Find(&list).Error
 	return list, err
 }
 
-// SumMemberReservedPoints 团队成员进行中任务已预扣、但还没结算进 points_used 的团队积分（F15 月度额度校验用）。
+// SumMemberReservedPoints 团队成员进行中任务已预扣、但还没结算进 points_used 的团队积分（月度额度校验用）。
 func SumMemberReservedPoints(tx *gorm.DB, userId int) int {
 	var n int64
 	tx.Model(&GenerationTask{}).Select("COALESCE(SUM(points_frozen), 0)").

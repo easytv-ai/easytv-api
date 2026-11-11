@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 成片工作室（T23）：策划案生成、积分预估、按策划案建画布。
+// 成片工作室：策划案生成、积分预估、按策划案建画布。
 
 // TextChatter 能同步跑一次文本对话的 provider（EasyAPIProvider 满足）。
 type TextChatter interface {
@@ -43,8 +43,8 @@ func PickDefaultModel(taskType string) string {
 	return ""
 }
 
-// PickUpscaleModel 超分模型（F4 超分 / API.md 23「高清」）：已定价的视频模型里带 upscale 能力的那个。
-// 能力来自 model_price.abilities，没打标签时按模型名推断（upscale / 超分），与旧行为一致。
+// PickUpscaleModel 超分模型（API.md 23「高清」）：已定价的视频模型里带 upscale 能力的那个。
+// 能力来自 model_price.abilities，没打标签时按模型名推断（upscale / 超分）。
 func PickUpscaleModel() string {
 	for _, name := range PickModelsByAbility(model.AbilityUpscale) {
 		if p, err := model.GetModelPrice(name); err == nil && p.Type == model.TaskTypeVideo {
@@ -63,7 +63,7 @@ func planModel() string {
 }
 
 // GenerateScreenplay 同步生成策划案并扣分（成功才扣）。teamId 为请求空间（API.md 20）：团队空间扣团队积分池。
-// GenerateScreenplay 生成策划案；bibleCtx 非空时把剧集设定附在用户输入前（API.md 27.3），episodeNo 记集号。
+// 要带剧集设定（bibleCtx，附在用户输入前，API.md 27.3）与集号（episodeNo）时用 GenerateScreenplayWithContext。
 func GenerateScreenplay(userId, teamId int, input string, targetSeconds int, style string, projectId int) (*model.Screenplay, error) {
 	return GenerateScreenplayWithContext(userId, teamId, input, targetSeconds, style, projectId, "", 0)
 }
@@ -122,7 +122,7 @@ func GenerateScreenplayWithContext(userId, teamId int, input string, targetSecon
 		perr = plan.Normalize(targetSeconds)
 	}
 	if perr != nil {
-		// 解析失败 / 超限 / 引用错误重试一次，把原因告诉模型（超限不再静默截断，复审 D03）
+		// 解析失败 / 超限 / 引用错误重试一次，把原因告诉模型（超限不静默截断）
 		note := "上一次输出不是合法 JSON，请只输出 JSON。"
 		if isPlanLimitErr(perr) {
 			note = "上一次输出不符合要求（" + perr.Error() + "），请严格遵守数量上限，镜头只能引用已定义的人物与场景 key。"
@@ -399,14 +399,14 @@ func BuildScreenplayCanvas(userId, teamId int, sp *model.Screenplay, m BuildMode
 		return nil, est, err
 	}
 	model.TouchProject(projectId)
-	// built_revision 记下画布基于哪一稿（复审 D02）
+	// built_revision 记下画布基于哪一稿
 	_ = model.UpdateScreenplayFields(sp.Id, map[string]any{"status": model.ScreenplayStatusBuilt, "canvas_id": cv.Id, "project_id": projectId, "built_revision": sp.Revision})
 	TrackOnce(userId, model.TrackEventFirstCanvas, map[string]any{"canvas_id": cv.Id, "from": "screenplay"})
 	Track(userId, "create_build", map[string]any{"screenplay_id": sp.Id, "canvas_id": cv.Id, "estimate": est.Total})
 	return cv, est, nil
 }
 
-// ---- 改稿后同步到既有画布（复审 D02，API.md 24.1）----
+// ---- 改稿后同步到既有画布（API.md 24.1）----
 
 // ScreenplaySync POST /user/screenplay/:id/build {sync:true} 的响应。
 type ScreenplaySync struct {

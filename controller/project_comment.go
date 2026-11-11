@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// 项目评论批注（F7，API.md 10.10）：项目所有者与同团队成员可读写。
+// 项目评论批注（API.md 10.10）：项目所有者与同团队成员可读写。
 
 const projectCommentNotFound = "项目不存在或无权访问"
 

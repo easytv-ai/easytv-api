@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserTask 新手任务完成记录（T7）：只记已完成项，未完成的由 setting.GrowthTaskKeys 补齐展示。
+// UserTask 新手任务完成记录：只记已完成项，未完成的由 setting.GrowthTaskKeys 补齐展示。
 type UserTask struct {
 	Id        int    `json:"id"`
 	UserId    int    `json:"user_id" gorm:"uniqueIndex:idx_user_task,priority:1"`

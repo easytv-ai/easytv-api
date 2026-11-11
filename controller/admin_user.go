@@ -34,7 +34,7 @@ func AdminGetUsers(c *gin.Context) {
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}
-	// 增长域筛选（T14）：邀请人 / 来源 / 口令
+	// 增长域筛选：邀请人 / 来源 / 口令
 	if v := queryInt(c, "inviter_id", 0); v > 0 {
 		query = query.Where("inviter_id = ?", v)
 	}
@@ -53,7 +53,7 @@ func AdminGetUsers(c *gin.Context) {
 		return
 	}
 
-	// 邀请人昵称（T14）
+	// 邀请人昵称
 	inviterIds := make([]int, 0, len(users))
 	for _, u := range users {
 		if u.InviterId > 0 {

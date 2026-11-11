@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 每日签到（T10）：基础积分 × 会员倍数，连续 7 的倍数天加连续奖励，当月满勤加满勤奖励。
+// 每日签到：基础积分 × 会员倍数，连续 7 的倍数天加连续奖励，当月满勤加满勤奖励。
 // 积分有效期 GrowthCheckinValidDays（默认 7 天），流水 biz_no 分别为 checkin / checkin_streak / checkin_month。
 
 // CheckinResult POST /user/checkin 响应。

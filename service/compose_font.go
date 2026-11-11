@@ -13,7 +13,7 @@ import (
 
 // 成片字幕 / 水印用的中文字体。
 //
-// 线上事故背景：服务器没装中文字体时，libass 找不到字形，中文字幕烧进去是空白或方块，
+// 服务器没装中文字体时，libass 找不到字形，中文字幕烧进去是空白或方块，
 // drawtext 水印则直接让整条 ffmpeg 失败（回退成不带字幕的成片）。这里做三件事：
 //  1. 运营可以用 setting 明确指定（ComposeFontFile 字体文件、ComposeSubtitleFont 字体名）；
 //  2. 没指定就在常见路径里找一款中日韩字体，字幕额外带 fontsdir，这样不依赖 fontconfig 是否登记过；

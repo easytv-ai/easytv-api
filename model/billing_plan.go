@@ -77,7 +77,7 @@ type ModelPrice struct {
 	// 置 1 后服务端会在提交前把首帧裁成输出尺寸，否则网关回
 	// 400「Inpaint image must match the requested width and height」。
 	FrameMatch int `json:"frame_match" gorm:"default:0;comment:1=首帧需与输出同尺寸"`
-	// ImageInput 图片模型怎么接收参考图 / 原图（F01）：none 不支持；edits 走 /v1/images/edits 表单上传（gpt-image 系）；
+	// ImageInput 图片模型怎么接收参考图 / 原图：none 不支持；edits 走 /v1/images/edits 表单上传（gpt-image 系）；
 	// url 在 /v1/images/generations 里带 image 地址（seedream / qwen-image / gemini image 等）。空串按模型名推断，见 EffectiveImageInput。
 	ImageInput string `json:"image_input" gorm:"type:varchar(10);default:'';comment:参考图输入方式 none/edits/url，空=按模型名推断"`
 	// Abilities 模型能干的媒体后处理能力（API.md 23），逗号分隔，如 "upscale,remove_subtitle"。
@@ -295,7 +295,7 @@ const (
 
 	SettingKeyBillingPromo = "BillingPromo"
 
-	// 顶部倒计时促销条（T18）：与 setting.GrowthPromoBanner* 同键，BillingPromo 视图里以 banner_* 读写
+	// 顶部倒计时促销条：与 setting.GrowthPromoBanner* 同键，BillingPromo 视图里以 banner_* 读写
 	SettingKeyPromoBannerEnabled = "GrowthPromoBannerEnabled"
 	SettingKeyPromoBannerLink    = "GrowthPromoBannerLink"
 	DefaultPromoBannerLink       = "/pricing"
@@ -313,7 +313,7 @@ type BillingPromo struct {
 	TeamSeatMax   int                `json:"team_seat_max"`
 	TeamSeatRate  float64            `json:"team_seat_rate"`
 
-	// 顶部倒计时条（T18）：不存进 BillingPromo JSON，读写 GrowthPromoBanner* 两个 setting 键
+	// 顶部倒计时条：不存进 BillingPromo JSON，读写 GrowthPromoBanner* 两个 setting 键
 	BannerEnabled bool   `json:"banner_enabled"`
 	BannerLink    string `json:"banner_link"`
 }
@@ -597,7 +597,7 @@ func DeleteModelPrice(id int) error {
 }
 
 // SeedModelsFromEnvIfEmpty 存量迁移：model_price 表为空且存在旧环境变量 EASYAPI_*_MODELS 时，
-// 按其清单导入（积分单价默认 1，运营后续经管理端调整）。env 仅作首次迁移，不再参与运行期。
+// 按其清单导入（积分单价默认 1，运营后续经管理端调整）。env 仅作首次迁移，不参与运行期。
 func SeedModelsFromEnvIfEmpty() {
 	var count int64
 	DB.Model(&ModelPrice{}).Count(&count)

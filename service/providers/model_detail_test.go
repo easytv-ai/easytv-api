@@ -128,7 +128,7 @@ func TestFetchModelDetailErrors(t *testing.T) {
 
 // TestFetchModelDetailEndpointsShapes endpoints 是网关 model.endpoints 列的原样透传：
 // 2026-09-17 实测线上是端点类型数组（与 supported_endpoint_types 同值），运营配了自定义端点时
-// 是 path/method 对象，两种都要能过（早期按对象类型化会让所有模型的详情都拉不到）。
+// 是 path/method 对象，两种都要能过（不能按对象类型化：数组形态解析失败，所有模型的详情都拉不到）。
 func TestFetchModelDetailEndpointsShapes(t *testing.T) {
 	cases := []struct {
 		name string

@@ -9,10 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// ===== 风格库（L5，运营手工录入，见 API.md 34）=====
+// ===== 风格库（运营手工录入，见 API.md 34）=====
 
 // Style 一个有名字的整体风格：封面 + 一段拼到生成提示词末尾的片段。
-// user_id 预留给 L18 用户自定义风格，0 表示官方。
+// user_id 预留给用户自定义风格，0 表示官方。
 type Style struct {
 	Id       int    `json:"id" gorm:"comment:风格ID"`
 	UserId   int    `json:"user_id" gorm:"index;default:0;comment:0 官方，>0 用户自定义"`

@@ -120,7 +120,7 @@ func TestEstimateTaskPoints(t *testing.T) {
 	}
 }
 
-// TestEstimateTaskPointsPromo 促销价（T18）：有效期内取 min(标准价/会员价, 促销价)，过期或高于原价时忽略。
+// TestEstimateTaskPointsPromo 促销价：有效期内取 min(标准价/会员价, 促销价)，过期或高于原价时忽略。
 func TestEstimateTaskPointsPromo(t *testing.T) {
 	mock := initMockDB(t)
 	now := time.Now().Unix()

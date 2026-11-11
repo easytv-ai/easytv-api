@@ -88,7 +88,7 @@ func GetGenerationModels(c *gin.Context) {
 			"points_per_unit":        0,
 			"member_points_per_unit": 0,
 			"priced":                 false,
-			// 促销价（T18）
+			// 促销价
 			"promo_points_per_unit":            0,
 			"promo_label":                      "",
 			"promo_starts_at":                  0,
@@ -165,7 +165,7 @@ func CreateTask(c *gin.Context) {
 		NodeId    string          `json:"node_id"`
 		ProjectId int             `json:"project_id"`
 		SkillId   int             `json:"skill_id"`
-		// 主体库引用（F2）与多语言（F5）
+		// 主体库引用与多语言
 		SubjectIds []int `json:"subject_ids"`
 		// SubjectVersions 锁定的主体版本 { "主体 id": 版本号 }（API.md 14.2），缺省用最新
 		SubjectVersions map[string]int `json:"subject_versions"`
@@ -178,7 +178,7 @@ func CreateTask(c *gin.Context) {
 		common.ApiErrorMsg(c, "无效的参数")
 		return
 	}
-	// 技能：必须是官方 / 已上架，或自己的技能（T26 分成按此记账）
+	// 技能：必须是官方 / 已上架，或自己的技能（分成按此记账）
 	var skill *model.Skill
 	if req.SkillId > 0 {
 		s, err := model.GetSkillById(req.SkillId)
@@ -213,7 +213,7 @@ func CreateTask(c *gin.Context) {
 		}
 		// 对话式工作流（agent）任务只能由画布对话接口创建（POST /user/canvas/:id/agent → service.NewAgentTask）。
 		// params 是客户端原样透传的，而 IsFreeChatTask 只看 params.agent.free：放行的话，任何登录用户
-		// 自带 free=true 就能建出免积分任务（跳过估价与预扣，ChatFreeEnabled=false 时也免单，复核发现 high）。
+		// 自带 free=true 就能建出免积分任务（跳过估价与预扣，ChatFreeEnabled=false 时也免单）。
 		// free 只能由服务端写入；同一道闸门也挂在批量编排入口（service.CreateBatch），规则见 CheckNoClientAgentParams。
 		if err := service.CheckNoClientAgentParams(string(req.Params)); err != nil {
 			common.ApiErrorMsg(c, err.Error())
@@ -291,7 +291,7 @@ func CreateTask(c *gin.Context) {
 
 	prompt := strings.TrimSpace(req.Prompt)
 	inputsJSON := string(inputsBytes)
-	// 主体库引用（F2）：参考图并入 inputs，描述追加到提示词
+	// 主体库引用：参考图并入 inputs，描述追加到提示词
 	if len(req.SubjectIds) > 0 {
 		if len(req.SubjectIds) > 4 {
 			req.SubjectIds = req.SubjectIds[:4]
@@ -306,7 +306,7 @@ func CreateTask(c *gin.Context) {
 		prompt, inputsJSON, used = service.ApplySubjectsToTask(userId, teamId, req.SubjectIds, prompt, inputsJSON, versions)
 		model.IncreaseSubjectUses(used)
 	}
-	// 多语言配音（F5）：先把台词翻成目标语种再 TTS
+	// 多语言配音：先把台词翻成目标语种再 TTS
 	lang := service.NormalizeLang(req.Lang)
 	if req.Type == model.TaskTypeAudio && lang != "" && lang != "zh" {
 		if translated, err := service.TranslateText(prompt, lang); err == nil && translated != "" {
@@ -407,9 +407,9 @@ func RetryMyTask(c *gin.Context) {
 		common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 暂未接入", src.Model))
 		return
 	}
-	// 通用重试不能照抄源任务的 free 标记（复核发现 medium）：源任务带 params.agent 时，
-	// free 必须按当前开关重新评估后再入库，口径与画布专用重试 NewAgentRetryTask（service/agent_loop.go）一致——
-	// 否则运营关掉 ChatFreeEnabled 后，重试以前创建的免积分对话任务仍然免单（只扣一次每日次数），开关回滚不彻底；
+	// 通用重试不能照抄源任务的 free 标记：源任务带 params.agent 时，free 按当前开关重新评估后再入库，
+	// 口径与画布专用重试 NewAgentRetryTask（service/agent_loop.go）一致。否则运营关掉 ChatFreeEnabled 后，
+	// 重试免费期创建的对话任务仍然免单（只扣一次每日次数），开关回滚不彻底。
 	// 重估而不是拒绝，是为了不打断用户在任务列表里的重试。免积分标记只能由服务端写：CreateTask 已挡住客户端自带的 params.agent。
 	task := &model.GenerationTask{
 		UserId:    userId,

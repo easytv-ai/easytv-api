@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// ===== 成片工作室：策划案（API.md 8.2，T23）=====
+// ===== 成片工作室：策划案（API.md 8.2）=====
 
 // CreateScreenplay POST /user/screenplay
 func CreateScreenplay(c *gin.Context) {
@@ -120,7 +120,7 @@ func UpdateMyScreenplay(c *gin.Context) {
 		return
 	}
 	if err := plan.Normalize(sp.TargetSeconds); err != nil {
-		// 超限 / 引用错误原样返回（说明上限与实际数量、哪一镜引用了什么），原稿不落库（复审 D03）
+		// 超限 / 引用错误原样返回（说明上限与实际数量、哪一镜引用了什么），原稿不落库
 		if errors.Is(err, model.ErrPlanLimit) || errors.Is(err, model.ErrPlanRef) {
 			common.ApiErrorMsg(c, err.Error())
 			return
@@ -129,7 +129,7 @@ func UpdateMyScreenplay(c *gin.Context) {
 		return
 	}
 	b, _ := json.Marshal(plan)
-	// 每次保存修订号 +1；已建画布时 revision != built_revision 即 stale（复审 D02）
+	// 每次保存修订号 +1；已建画布时 revision != built_revision 即 stale
 	fields := map[string]any{"plan": string(b), "revision": gorm.Expr("revision + 1")}
 	if sp.Status == model.ScreenplayStatusFailed {
 		fields["status"] = model.ScreenplayStatusReady

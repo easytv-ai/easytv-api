@@ -14,7 +14,7 @@ import (
 	"easytv-api/model"
 )
 
-// 末帧提取（F4 续写）：取视频最后一帧存成 JPG 资产，作为下一段的首帧参考图。
+// 末帧提取（续写）：取视频最后一帧存成 JPG 资产，作为下一段的首帧参考图。
 
 // ExtractLastFrame 返回新建的图片资产；无 ffmpeg 或失败时返回错误。
 func ExtractLastFrame(userId int, video *model.Asset) (*model.Asset, error) {

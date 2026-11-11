@@ -177,9 +177,8 @@ func createMediaModelJob(job *model.MediaJob, action *MediaAction, src *model.As
 	}
 	fillMediaJobDuration(params, src)
 	paramsJSON, _ := json.Marshal(params)
-	// 免积分标记只能由服务端写：媒体动作的 params 也是客户端透传的，同样不许自带 params.agent
-	// （复核发现：媒体入口未覆盖）。正常目录下媒体任务都是 image/video/audio、命中不了免积分分支，
-	// 这里按「所有接受客户端 params 的入口」统一口径堵住，避免模型目录变化后变成旁路。
+	// 免积分标记只能由服务端写：媒体动作的 params 也是客户端透传的，同样不许自带 params.agent。
+	// 媒体任务目前命不中免积分分支，仍按「所有接受客户端 params 的入口」统一拦截，免得模型目录变化后成为旁路。
 	if err := CheckNoClientAgentParams(string(paramsJSON)); err != nil {
 		return nil, fmt.Errorf("%s：%w", action.Label, err)
 	}

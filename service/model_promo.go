@@ -8,7 +8,7 @@ import (
 	"easytv-api/setting"
 )
 
-// 模型促销价（T18）。运营在后台按模型手工设促销四字段；网关导入新模型时按 GrowthNewModelPromo* 自动写首发价。
+// 模型促销价。运营在后台按模型手工设促销四字段；网关导入新模型时按 GrowthNewModelPromo* 自动写首发价。
 
 // ApplyNewModelPromo 给新导入的模型写首发价：促销价 = ceil(标准价 × GrowthNewModelPromoRate)，
 // 从现在起持续 GrowthNewModelPromoDays 天，标签取 GrowthNewModelPromoLabel。

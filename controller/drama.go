@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// ===== 短剧第二批（API.md 25）：正反打模板、审片结论、定版锁 =====
+// ===== 短剧（API.md 25）：正反打模板、审片结论、定版锁 =====
 
 // DialogueShotsMyScreenplay POST /user/screenplay/:id/dialogue-shots
 // 按两人对白生成一组正反打镜头插进策划案（revision+1），返回策划案。
@@ -79,7 +79,7 @@ func ReviewMyCanvasShot(c *gin.Context) {
 		common.ApiErrorMsg(c, "无效的参数")
 		return
 	}
-	// 视频候选与分镜图 / 角色图都能审（G05 先审低成本的图）
+	// 视频候选与分镜图 / 角色图都能审（先审低成本的图）
 	asset, err := model.GetAssetByIdUnscoped(req.AssetId)
 	if err != nil || asset.DeletedAt.Valid || (asset.Type != model.AssetTypeVideo && asset.Type != model.AssetTypeImage) {
 		common.ApiErrorMsg(c, "候选素材不存在")

@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 活动（T33）：投稿、审核、结算发奖。
+// 活动：投稿、审核、结算发奖。
 
 // EnterCampaign 用已发布的作品投稿。
 func EnterCampaign(userId, workId, campaignId int) (*model.CampaignEntry, error) {

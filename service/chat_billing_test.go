@@ -27,7 +27,7 @@ func freeChatTestTask() *model.GenerationTask {
 	}
 }
 
-// paidChatTestTask 开关关闭 / 老任务：params.agent 没有 free 标记，走旧的按轮预扣。
+// paidChatTestTask 开关关闭 / 老任务：params.agent 没有 free 标记，走按轮预扣。
 func paidChatTestTask() *model.GenerationTask {
 	return &model.GenerationTask{
 		UserId: 8, Type: model.TaskTypeText, Model: "gpt-4o-mini", Provider: "chat-test",
@@ -64,7 +64,7 @@ func seedChatSetting(t *testing.T, key, val string) {
 	t.Cleanup(func() { model.SetSettingCache(key, "") })
 }
 
-// seedChatOffSettings 关掉免积分开关（旧计费路径）。
+// seedChatOffSettings 关掉免积分开关（按轮计费路径）。
 func seedChatOffSettings(t *testing.T) {
 	t.Helper()
 	for k, v := range map[string]string{
@@ -301,7 +301,7 @@ func TestFailTaskRefundsChatQuotaWithHostileParamsText(t *testing.T) {
 	}
 }
 
-// TestFailTaskQuotaRefundIsAtomic 退次数与状态 / 标记同一事务（复核发现 low）：
+// TestFailTaskQuotaRefundIsAtomic 退次数与状态 / 标记同一事务：
 // 扣减失败时整体回滚，不落「标记已落库、次数却没退」又无人补偿的中间态；随后重试能完整退一次。
 func TestFailTaskQuotaRefundIsAtomic(t *testing.T) {
 	seedChatQuotaSettings(t, "2")
@@ -665,7 +665,7 @@ func TestRunAgentLoopFactsFollowTaskFreeFlag(t *testing.T) {
 }
 
 // TestAgentFactsForOmitsUnverifiedRemaining 次数读不到时不编造「剩余」：
-// GetChatUsage 失败 → 整段【平台事实】不输出（旧兜底会把配置上限当剩余次数写给模型）。
+// GetChatUsage 失败 → 整段【平台事实】不输出（不能把配置上限当剩余次数写给模型）。
 func TestAgentFactsForOmitsUnverifiedRemaining(t *testing.T) {
 	seedChatQuotaSettings(t, "2")
 	mock := chatQuotaTestDB(t)
@@ -779,7 +779,7 @@ func TestWriteChatQuotaDayRoundTrip(t *testing.T) {
 }
 
 // TestFailTaskSkipsChatQuotaRefundWhenNotConsumed 创建时是会员 / 不限次（标记为空串）→ 失败不退次数，
-// 连幂等闸门的 payer_id 更新都不发（没消费就没得退，复核发现 medium）。
+// 连幂等闸门的 payer_id 更新都不发（没消费就没得退）。
 func TestFailTaskSkipsChatQuotaRefundWhenNotConsumed(t *testing.T) {
 	seedChatQuotaSettings(t, "2")
 	mock := chatQuotaTestDB(t)

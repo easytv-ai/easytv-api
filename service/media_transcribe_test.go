@@ -9,7 +9,7 @@ import (
 	"easytv-api/model"
 )
 
-// ===== 语音转字幕 / 去停顿（L8，API.md 35）=====
+// ===== 语音转字幕 / 去停顿（API.md 35）=====
 
 func TestBuildTranscriptSRT(t *testing.T) {
 	segs := []TranscribeSegment{

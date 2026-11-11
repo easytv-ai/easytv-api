@@ -19,7 +19,7 @@ func GetPublicSkills(c *gin.Context) {
 		Category:      strings.TrimSpace(c.Query("category")),
 		Keyword:       strings.TrimSpace(c.Query("keyword")),
 		Status:        &on,
-		PublicVisible: true, // 官方 + 已上架的用户技能（T26）
+		PublicVisible: true, // 官方 + 已上架的用户技能
 	}
 	switch strings.TrimSpace(c.Query("source")) {
 	case "official":
@@ -71,7 +71,7 @@ func GetMySkill(c *gin.Context) {
 		common.ApiErrorMsg(c, model.ErrNotFound.Error())
 		return
 	}
-	// 别人的私有技能：只有同团队且已共享才可读（F7，API.md 10.10）
+	// 别人的私有技能：只有同团队且已共享才可读（API.md 10.10）
 	if s.UserId != 0 && s.UserId != userId {
 		if s.Shared != 1 || s.TeamId == 0 || s.TeamId != service.TeamIdOf(userId) {
 			common.ApiErrorMsg(c, model.ErrNotFound.Error())
@@ -151,7 +151,7 @@ type userSkillPayload struct {
 	Scene        *string `json:"scene"`
 	Howto        *string `json:"howto"`
 	Output       *string `json:"output"`
-	// Shared 共享给团队（F7，API.md 10.10）；用户不在团队时置 true 会报错
+	// Shared 共享给团队（API.md 10.10）；用户不在团队时置 true 会报错
 	Shared *bool `json:"shared"`
 }
 
@@ -229,7 +229,7 @@ func applyCanvasTemplate(userId int, canvasId *int, f map[string]any) string {
 	return ""
 }
 
-// applyTeamShare 处理 shared 开关（F7，API.md 10.10）：置 true 时写入当前团队 id。
+// applyTeamShare 处理 shared 开关（API.md 10.10）：置 true 时写入当前团队 id。
 func applyTeamShare(userId int, shared *bool, f map[string]any) string {
 	if shared == nil {
 		return ""

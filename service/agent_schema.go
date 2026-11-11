@@ -214,7 +214,7 @@ type AgentModelHint struct {
 	Label  string `json:"label"`
 	Unit   string `json:"unit"`   // count / second / image / call
 	Points int    `json:"points"` // 标准单价（给模型做取舍参考）
-	// 促销价（T18）：窗口生效期内实际结算取 min(标准/会员, 促销)（model.EffectiveUnitPoints）。
+	// 促销价：窗口生效期内实际结算取 min(标准/会员, 促销)（model.EffectiveUnitPoints）。
 	// 平台事实要如实渲染促销价，否则提示词报价会比真实扣费偏贵（复核 claim2c）。
 	PromoActive bool     `json:"promo_active,omitempty"` // 促销窗口生效（不代表一定更便宜）
 	PromoPoints int      `json:"promo_points,omitempty"` // 促销单价

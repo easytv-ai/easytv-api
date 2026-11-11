@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 团队成员月度积分上限（API.md 10.5，F7）=====
+// ===== 团队成员月度积分上限（API.md 10.5）=====
 
 // SetTeamMemberLimit PUT /user/team/member/:uid/limit { points_limit }
 func SetTeamMemberLimit(c *gin.Context) {

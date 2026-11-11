@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// BonusCode 口令红包 / 兑换码（T15）。一个码可同时带：立即到账积分、首充加赠权益、会员天数；kind 只是主类型标签。
+// BonusCode 口令红包 / 兑换码。一个码可同时带：立即到账积分、首充加赠权益、会员天数；kind 只是主类型标签。
 type BonusCode struct {
 	Id                     int     `json:"id"`
 	Code                   string  `json:"code" gorm:"type:varchar(32);uniqueIndex;comment:口令（存大写，比较忽略大小写）"`

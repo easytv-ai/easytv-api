@@ -33,7 +33,7 @@ const (
 )
 
 // AgentChatter 多轮循环需要的文本调用能力。*providers.EasyAPIProvider 已经满足（ChatWithOptions）。
-// 可选参数（max_tokens / thinking）由 agentChat 从 setting 读后传入，零值即历史请求体。
+// 可选参数（max_tokens / thinking）由 agentChat 从 setting 读后传入，零值时请求体不带这些字段。
 type AgentChatter interface {
 	ChatWithOptions(modelName, prompt string, opts ChatParams) (string, error)
 }
@@ -274,7 +274,7 @@ func agentCatalogHints(catalog AgentModelCatalog) map[string][]AgentModelHint {
 
 func appendAgentToolFeed(feed []string, line string) []string {
 	// 每条工具结果也封顶：list_templates 一次最多 8 条模板、每条带压缩后的 graph，不封顶的话
-	// 六条工具结果就能把每轮提示词撑到十万字（复核发现 medium）
+	// 六条工具结果就能把每轮提示词撑到十万字
 	feed = append(feed, clipRunes(line, agentToolFeedLineMax))
 	if len(feed) > agentToolFeedMax {
 		feed = feed[len(feed)-agentToolFeedMax:]
@@ -492,7 +492,7 @@ func agentNodeRecords(last map[string]*assistLastTask) map[string]*AgentNodeReco
 }
 
 // agentNodeRef 存进任务 params 的画布节点上下文。
-// 比老 assist 的 assistNodeRef 多存 content / has_media / selected / upstream / downstream：
+// 比画布助手的 assistNodeRef 多存 content / has_media / selected / upstream / downstream：
 // 多轮循环在 worker 里每轮重新拼提示词（RunAgentRounds → AgentCanvasText），只能读这份快照，
 // 少一个字段模型就少看见一截画布——丢了 upstream/downstream 它不知道谁连着谁，
 // 丢了 selected 就认不出用户指的是哪个节点。老任务的 params 缺这些键时按零值读，不影响回放。
@@ -622,7 +622,7 @@ func NewAgentRetryTask(userId int, cv *model.Canvas, src *model.GenerationTask, 
 	if cv == nil || src == nil || src.UserId != userId || src.CanvasId != cv.Id || src.Type != model.TaskTypeText {
 		return nil, nil, model.ErrNotFound
 	}
-	// 上一轮还在跑就不许再起一轮：每次重试都消费一次当日次数与一个并发位（复核发现）
+	// 上一轮还在跑就不许再起一轮：每次重试都消费一次当日次数与一个并发位
 	if src.Status == model.TaskStatusPending || src.Status == model.TaskStatusRunning {
 		return nil, nil, errors.New("上一轮还在生成中，等它结束再重试")
 	}
@@ -725,7 +725,7 @@ func (s *dbAgentStepSink) Step(r AgentStepRecord) {
 
 // settleAgentLoop 对话任务成功后的结算，返回本次实际消耗积分（由 CompleteTask 写进 cost_points）。
 // 免积分对话（契约第 5 条）：整段跳过按轮结算与退差，cost_points 保持 0；
-// 其余任务沿用旧口径：按实际轮数重新估价，多预扣的部分退回。
+// 其余任务按实际轮数重新估价，多预扣的部分退回。
 func settleAgentLoop(task *model.GenerationTask, used int, isMember bool) int {
 	if IsFreeChatTask(task) {
 		return 0

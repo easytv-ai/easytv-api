@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// ===== 入口闸门（复核发现）：客户端自带 params.agent.free、通用重试复制旧 free 标记 =====
+// ===== 入口闸门：客户端自带 params.agent.free、通用重试复制旧 free 标记 =====
 
 const (
 	testFreeAgentParams = `{"agent":{"question":"做个片子","max_rounds":3,"free":true}}`
@@ -65,7 +65,7 @@ func expectFailedTask(mock sqlmock.Sqlmock, params string, times int) {
 	}
 }
 
-// TestUserTaskRejectsClientChatFree 复核发现的复现体：params 由客户端原样提供，
+// TestUserTaskRejectsClientChatFree params 由客户端原样提供，
 // 自带 agent.free=true 的建任务请求必须被入口拦下，不能走到 StartTask 的免积分分支。
 func TestUserTaskRejectsClientChatFree(t *testing.T) {
 	r, _ := newAuthedEngine(t)
@@ -91,10 +91,10 @@ func TestUserTaskWithoutFreeStillReachesHandler(t *testing.T) {
 	}
 }
 
-// TestRetryFreeTaskReevaluatesWhenChatFreeOff 复核发现（medium）的处置：开关关闭后重试免费期创建的对话任务，
-// 不能再原样复制 free=true 免单。本轮口径是「按当前开关重估」而不是「入口拒绝」——重估在 RetryMyTask
-// （service.RewriteChatFreeFlag，与 NewAgentRetryTask 一致），所以这里断言请求到达 RetryMyTask、
-// 不被免费闸门拦下，且来源任务只被控制器读一次（旧的 GuardRetryChatFree 挂载已从路由摘掉）。
+// TestRetryFreeTaskReevaluatesWhenChatFreeOff 开关关闭后重试免费期创建的对话任务，不能原样复制 free=true 免单。
+// 口径是「按当前开关重估」而不是「入口拒绝」：重估在 RetryMyTask（service.RewriteChatFreeFlag，
+// 与 NewAgentRetryTask 一致），所以这里断言请求到达 RetryMyTask、不被入口拦下，
+// 且来源任务只被控制器读一次（重试路由上不挂免费闸门）。
 // 「free 被重估为 false 并走付费估价路径（预扣积分、不碰 ai_chat_usage）」的完整断言见
 // tests/ai_chat_free_flag_test.go 的 TestRetryAgentTaskReevaluatesFreeFlag。
 func TestRetryFreeTaskReevaluatesWhenChatFreeOff(t *testing.T) {

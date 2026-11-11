@@ -138,7 +138,7 @@ func TestEasyAPIProviderUnmappedError(t *testing.T) {
 	}
 }
 
-// ===== 新版 /v1/videos API 测试 =====
+// ===== /v1/videos API 测试 =====
 
 // fakeV2VideoGateway 模拟 /v1/videos 任务端点的网关。
 func fakeV2VideoGateway(t *testing.T) (*httptest.Server, *[]string) {
@@ -206,7 +206,7 @@ func fakeV2VideoGateway(t *testing.T) (*httptest.Server, *[]string) {
 	return srv, &seen
 }
 
-// TestV2VideoAPIFlow 测试新版视频 API 的请求组装与响应解析。
+// TestV2VideoAPIFlow /v1/videos 的请求组装与响应解析。
 func TestV2VideoAPIFlow(t *testing.T) {
 	srv, seen := fakeV2VideoGateway(t)
 	defer srv.Close()

@@ -39,7 +39,7 @@ func TeamView(userId int) map[string]any {
 		return nil
 	}
 	members, _ := model.GetTeamMembers(team.Id)
-	model.AttachMemberQuotas(members) // 成员月度额度（F7）
+	model.AttachMemberQuotas(members) // 成员月度额度
 	ownerMembership := model.GetActiveMembership(team.OwnerId)
 	view := map[string]any{
 		"id":            team.Id,
@@ -111,7 +111,6 @@ func QuitTeam(userId int) error {
 	return model.RemoveTeamMember(m.TeamId, userId)
 }
 
-// KickMember owner 移除成员。
 // KickMember 所有者或管理员移除成员；管理员不能移除所有者和其他管理员。
 func KickMember(operatorId, userId int) error {
 	team, op, err := TeamManager(operatorId)

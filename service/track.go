@@ -7,7 +7,7 @@ import (
 	"easytv-api/model"
 )
 
-// Track 服务端事件写入（T1）：业务流程里直接调用，失败只记日志不影响主流程。
+// Track 服务端事件写入：业务流程里直接调用，失败只记日志不影响主流程。
 // 来源四列从用户表回填，这样漏斗按渠道分组时不需要再 join。
 func Track(userId int, name string, props map[string]any) {
 	trackWithClient(userId, name, props, "", "")
@@ -60,7 +60,7 @@ func TrackOnce(userId int, name string, props map[string]any) bool {
 }
 
 // AfterRegister 注册成功后的增长钩子（所有注册入口都应调用：邮箱 / 微信 / 短信）。
-// 关联匿名事件、绑定邀请人（T12）、写 register 事件、发新人礼包（T7）、自动领取口令（T15）。
+// 关联匿名事件、绑定邀请人、写 register 事件、发新人礼包、自动领取口令。
 func AfterRegister(user *model.User, attr model.Attribution, ip, device string) {
 	if user == nil || user.Id <= 0 {
 		return

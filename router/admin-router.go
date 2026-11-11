@@ -84,7 +84,7 @@ func SetAdminRouter(router *gin.Engine) {
 		adminRouter.GET("/skill", controller.AdminGetSkills)
 		adminRouter.PUT("/skill/:id/review", controller.AdminReviewSkill)
 		// 站外投稿与活动（API.md 8.5 / 8.6）
-		// 迭代四：主体库 / 团队额度（API.md 10.9）
+		// 主体库 / 团队额度（API.md 10.9）
 		adminRouter.GET("/subject", controller.AdminGetSubjects)
 		adminRouter.GET("/team", controller.AdminGetTeams)
 		adminRouter.GET("/team/:id/members", controller.AdminGetTeamMembers)
@@ -158,7 +158,7 @@ func SetAdminRouter(router *gin.Engine) {
 		rootRouter.DELETE("/user/:id", controller.AdminDeleteUser)
 		rootRouter.PUT("/user/:id/bind", controller.AdminRebindUser)
 		rootRouter.PUT("/user/:id/invite-block", controller.AdminSetInviteBlock)
-		// 口令红包（T15）
+		// 口令红包
 		rootRouter.GET("/bonus-code", controller.AdminGetBonusCodes)
 		rootRouter.POST("/bonus-code", controller.AdminCreateBonusCode)
 		rootRouter.POST("/bonus-code/batch", controller.AdminBatchBonusCodes)

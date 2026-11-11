@@ -6,10 +6,10 @@ import (
 )
 
 // 增长机制配置（DB setting 表，PascalCase 键，管理端「增长」面板可热更新）。
-// 迭代一（T7 / T10 / T12 / T15 / T18）共用这一组键名，数值一律不写死在业务代码里。
+// 数值一律不写死在业务代码里。
 // 积分发放统一走 service.GiftPoints，reason 使用下方 GrowthReason* 常量，便于流水筛选与后台冻结。
 const (
-	// ---- 新人礼包与新手任务（T7）----
+	// ---- 新人礼包与新手任务 ----
 	GrowthSignupPoints    = "GrowthSignupPoints"    // 注册赠送积分，默认 200；0 关闭
 	GrowthSignupValidDays = "GrowthSignupValidDays" // 注册赠送有效天数，默认 30
 	GrowthTaskFirstCanvas = "GrowthTaskFirstCanvas" // 首个画布，默认 50
@@ -19,14 +19,14 @@ const (
 	GrowthTaskBindWeChat  = "GrowthTaskBindWeChat"  // 绑定微信（已下线展示，保留键兼容旧 setting）
 	GrowthTaskValidDays   = "GrowthTaskValidDays"   // 任务奖励有效天数，默认 30
 
-	// ---- 签到（T10）----
+	// ---- 签到 ----
 	GrowthCheckinPoints           = "GrowthCheckinPoints"           // 每日签到积分，默认 10
 	GrowthCheckinValidDays        = "GrowthCheckinValidDays"        // 签到积分有效天数，默认 7
 	GrowthCheckinStreakBonus      = "GrowthCheckinStreakBonus"      // 连续 7/14/21/28 天额外积分，默认 50
 	GrowthCheckinMonthBonus       = "GrowthCheckinMonthBonus"       // 当月满勤额外积分，默认 200
 	GrowthCheckinMemberMultiplier = "GrowthCheckinMemberMultiplier" // 会员倍数，默认 2
 
-	// ---- 双向邀请（T12）----
+	// ---- 双向邀请 ----
 	GrowthInviteInviteePoints = "GrowthInviteInviteePoints" // 被邀请人完成首条视频后得，默认 100
 	GrowthInviteInviterPoints = "GrowthInviteInviterPoints" // 邀请人同时得，默认 100
 	GrowthInviteValidDays     = "GrowthInviteValidDays"     // 邀请积分有效天数，默认 30
@@ -36,12 +36,12 @@ const (
 	GrowthSignupDailyIpLimit  = "GrowthSignupDailyIpLimit"  // 同 IP 每日新注册上限（0 不限），默认 10
 	GrowthInviteBaseUrl       = "GrowthInviteBaseUrl"       // 邀请链接站点前缀，留空则回退 ServerAddress
 
-	// ---- 口令红包（T15）----
+	// ---- 口令红包 ----
 	GrowthBonusDefaultRechargeRate = "GrowthBonusDefaultRechargeRate" // 首充加赠默认比例，默认 0.20
 	GrowthBonusDefaultCapPoints    = "GrowthBonusDefaultCapPoints"    // 首充加赠默认封顶积分，默认 2000
 	GrowthBonusDefaultValidDays    = "GrowthBonusDefaultValidDays"    // 首充权益默认有效天数，默认 30
 
-	// ---- 促销条与新模型首发价（T18）----
+	// ---- 促销条与新模型首发价 ----
 	GrowthPromoBannerEnabled = "GrowthPromoBannerEnabled" // 全站顶部倒计时条开关，"true"/"1" 开（与 model.SettingKeyPromoBannerEnabled 同键，/admin/billing/promo 的 banner_enabled 也写这里）
 	GrowthPromoBannerLink    = "GrowthPromoBannerLink"    // 倒计时条按钮链接，默认 /pricing（同上，banner_link）
 	GrowthNewModelPromoRate  = "GrowthNewModelPromoRate"  // 网关导入新模型时自动首发价比例（0 关闭），默认 0.5
@@ -51,7 +51,7 @@ const (
 	// ---- 积分换算 ----
 	GrowthPointsPerYuan = "GrowthPointsPerYuan" // 人民币与积分汇率，默认 20（返利/加赠/技能收益提现，与 EasyAIPricingPointsRate 一致）
 
-	// ---- 迭代二：技能分成 / 分享回流 / 站外投稿 / 成片（T26 / T30 / T31 / T24）----
+	// ---- 技能分成 / 分享回流 / 站外投稿 / 成片 ----
 	GrowthSkillAuthorShare   = "GrowthSkillAuthorShare"   // 技能被调用时作者分成比例（按扣分数），默认 0.20
 	GrowthShareOpenPoints    = "GrowthShareOpenPoints"    // 作品被分享打开一次给作者的积分，默认 5；0 关闭
 	GrowthShareDailyCap      = "GrowthShareDailyCap"      // 每个作者每日分享回流积分上限，默认 50
@@ -70,9 +70,8 @@ const (
 	ComposePlanPrompt        = "ComposePlanPrompt"        // 策划案 system prompt，空用内置默认
 	ComposePlanModel         = "ComposePlanModel"         // 策划案用的文本模型，空取 model_price 里第一个生效的文本模型
 	// 成片向导默认选中的模型（空取 model_price 里第一个生效的同类型模型）。
-	// 加这三个键是因为默认值原来只能靠定价行的 id 顺序，
-	// 而某个模型的某条通路在网关坏掉时（例如 seedance 图生视频回 500），
-	// 运营需要能立刻把默认换成可用的那个，不等发版。
+	// 单独设键而不靠定价行的 id 顺序：某个模型的某条通路在网关坏掉时（例如 seedance 图生视频回 500），
+	// 运营能立刻把默认换成可用的那个，不等发版。
 	ComposeImageModel = "ComposeImageModel"
 	ComposeVideoModel = "ComposeVideoModel"
 	ComposeAudioModel = "ComposeAudioModel"
@@ -80,7 +79,7 @@ const (
 	// 空 = 前端按模型名偏好自动挑（gemini → claude → gpt-5 / 4.1 → qwen-vl），后端拉片解读取第一个可用文本模型。
 	VisionTextModel = "VisionTextModel"
 
-	// ---- 迭代三：渠道伙伴 / 召回 / 会员日（M12 / M13 / M7）----
+	// ---- 渠道伙伴 / 召回 / 会员日 ----
 	GrowthPartnerRebateRate      = "GrowthPartnerRebateRate"      // 伙伴充值返佣比例（人民币），默认 0.15
 	GrowthPartnerRebateMonths    = "GrowthPartnerRebateMonths"    // 返佣有效月数（自归属起），默认 12
 	GrowthLifecycleEnabled       = "GrowthLifecycleEnabled"       // 生命周期触达总开关（回归礼 / 续费提醒 / 积分过期提醒），默认关，运营在后台打开
@@ -165,7 +164,7 @@ type GrowthConfig struct {
 
 	PointsPerYuan float64 `json:"-"`
 
-	// 迭代二
+	// 技能分成 / 分享回流 / 站外投稿 / 成片
 	SkillAuthorShare   float64 `json:"skill_author_share"`
 	ShareOpenPoints    int     `json:"share_open_points"`
 	ShareDailyCap      int     `json:"share_daily_cap"`
@@ -190,7 +189,7 @@ type GrowthConfig struct {
 	// 语音转字幕模型（API.md 35）；空串表示按 transcribe 能力位自动挑
 	TranscribeModel string `json:"transcribe_model"`
 
-	// 迭代三
+	// 渠道伙伴 / 召回 / 会员日
 	PartnerRebateRate      float64 `json:"partner_rebate_rate"`
 	PartnerRebateMonths    int     `json:"-"`
 	LifecycleEnabled       bool    `json:"-"`

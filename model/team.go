@@ -34,7 +34,7 @@ type TeamMember struct {
 	// Permission 成员权限（API.md 15）：admin 管理员 / editor 编辑者 / viewer 查看者；owner 不看这个字段，恒为管理员
 	Permission string `json:"permission" gorm:"type:varchar(10);default:'editor';comment:admin/editor/viewer"`
 	JoinedAt   int64  `json:"joined_at" gorm:"bigint"`
-	// 成员月度积分上限（F7）：0 不限；每月 1 日按 limit_reset_at 重置 points_used
+	// 成员月度积分上限：0 不限；每月 1 日按 limit_reset_at 重置 points_used
 	PointsLimit  int   `json:"points_limit" gorm:"default:0"`
 	PointsUsed   int   `json:"points_used" gorm:"default:0"`
 	LimitResetAt int64 `json:"limit_reset_at" gorm:"bigint;default:0"`
@@ -248,7 +248,7 @@ func IncrInviteUses(tx *gorm.DB, id int) error {
 	return tx.Model(&TeamInvite{}).Where("id = ?", id).Update("uses", gorm.Expr("uses + 1")).Error
 }
 
-// ---- 成员积分月度上限（F7）----
+// ---- 成员积分月度上限 ----
 
 // MonthStartUnix 当月 1 日零点（Asia/Shanghai）。
 func MonthStartUnix() int64 {
@@ -379,7 +379,7 @@ func AttachMemberQuotas(list []*TeamMember) {
 	}
 }
 
-// ---- 管理端（F7）----
+// ---- 管理端 ----
 
 // AdminTeamRow 管理端团队列表一行。
 type AdminTeamRow struct {

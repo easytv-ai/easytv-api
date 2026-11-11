@@ -32,9 +32,9 @@ const (
 	PromoterBillTypeWithdrawRefund  = 4  // 提现退回
 	PromoterBillTypeConvertQuota    = 5  // 转额度出账
 	PromoterBillTypeRebateRevoke    = 6  // 返利作废冲回
-	PromoterBillTypeSkillRevenue    = 7  // 技能分成入账（T26，amount 记积分数）
+	PromoterBillTypeSkillRevenue    = 7  // 技能分成入账（amount 记积分数）
 	PromoterBillTypeSkillExchange   = 8  // 技能收益兑换积分出账（负数）
-	PromoterBillTypePartnerRebate   = 9  // 渠道伙伴充值返佣（M12，amount 记人民币元，入 quota 可提现）
+	PromoterBillTypePartnerRebate   = 9  // 渠道伙伴充值返佣（amount 记人民币元，入 quota 可提现）
 	PromoterBillTypeSkillCashOut    = 10 // 技能收益提现冻结（负数积分数，source_amount 记人民币）
 	PromoterBillTypeSkillCashRefund = 11 // 技能收益提现退回（正数积分数）
 

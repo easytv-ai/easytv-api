@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 创作者分成（T26）：技能被调用并结算后，按比例把积分数记给作者；作者可把收益兑成积分或提现人民币。
+// 创作者分成：技能被调用并结算后，按比例把积分数记给作者；作者可把收益兑成积分或提现人民币。
 
 var creatorSkillBalanceTypes = []int{
 	model.PromoterBillTypeSkillRevenue,

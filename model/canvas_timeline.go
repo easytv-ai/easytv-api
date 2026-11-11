@@ -58,7 +58,7 @@ type Timeline struct {
 	Voice      bool   `json:"voice"`
 	Lang       string `json:"lang"`
 	BgmAssetId int    `json:"bgm_asset_id"`
-	// BgmVolume BGM 音量：JSON 里缺失解码成 TimelineVolumeUnset(-1)，Normalize 回落 0.2；明确传 0 就是静音（复审 D07）
+	// BgmVolume BGM 音量：JSON 里缺失解码成 TimelineVolumeUnset(-1)，Normalize 回落 0.2；明确传 0 就是静音
 	BgmVolume float64        `json:"bgm_volume"`
 	Clips     []TimelineClip `json:"clips"`
 	// ReviewGate 审批门禁（API.md 26.1）："" 关闭 / rejected 退回即拦 / approved 分镜图通过才放行视频
@@ -82,7 +82,7 @@ func (t *Timeline) UnmarshalJSON(b []byte) error {
 }
 
 // TimelineClip 时间线上的一个剪辑片段。同一个节点（素材）可以按不同入出点出现多次（正反打 / 反应镜头），
-// 每条片段有独立 Id（复审 D04），服务端为空时生成。
+// 每条片段有独立 Id，服务端为空时生成。
 type TimelineClip struct {
 	Id      string `json:"id"`
 	NodeId  string `json:"node_id"`

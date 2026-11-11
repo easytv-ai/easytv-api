@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 活动（API.md 8.6，T33）=====
+// ===== 活动（API.md 8.6）=====
 
 var slugRe = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,58}$`)
 

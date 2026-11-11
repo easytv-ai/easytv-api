@@ -24,7 +24,7 @@ import (
 // ===== 媒体处理能力层 =====
 //
 // 全服务就这一处直连 ffmpeg / ffprobe：成片合成、封面抽帧、末帧、首帧适配、媒体工具
-// （API.md 23）都走这里的入口，可执行文件路径由 setting 配置，不再各写各的 "ffmpeg"。
+// （API.md 23）都走这里的入口，可执行文件路径由 setting 配置，别处不要直接写 "ffmpeg"。
 
 const (
 	// MediaSourceMaxByte 单个源素材下载上限（1GB）：抽帧 / 分离要下载整段视频，

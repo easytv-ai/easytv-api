@@ -8,7 +8,7 @@ import (
 
 // ===== 对抗测试：坏模型输出 / 幻觉 / 提示词注入 / 超限 / 取消（agent-contract 第 3 / 4 / 5 节）=====
 //
-// 只新增测试文件，不改生产代码。断言依据 docs/plans/agent-contract.md：
+// 断言依据 docs/plans/agent-contract.md：
 //   - 4.1 error 级 code 必须阻断（该条 change 被整条丢弃，normalized 为空）；
 //   - 4.2 warning 级 code 不阻断（ok 仍可为 true）；
 //   - 4.4 分层入口：图级 ValidateAgentGraph / 计划级 BuildAgentPlan / 解析级 ParseAgentReply；

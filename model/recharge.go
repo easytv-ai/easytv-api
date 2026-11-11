@@ -30,7 +30,7 @@ type Recharge struct {
 
 	// 可开票余额：创建时等于实付 Money；开票按 FIFO 扣减，扣到 0 则 Invoiced=true。
 	InvoiceableAmount float64 `json:"invoiceable_amount" gorm:"default:0;comment:可开票金额"`
-	//是否已开票（可开票余额已扣完）
+	// 是否已开票（可开票余额已扣完）
 	Invoiced bool `json:"invoiced" gorm:"index;default:false;comment:是否已开票"`
 
 	// 退款相关字段：累计已退金额（部分退款累加，达到 Money 后状态切到 refunded）。

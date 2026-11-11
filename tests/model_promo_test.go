@@ -7,7 +7,7 @@ import (
 	"easytv-api/service"
 )
 
-// TestModelPricePromo 促销价的有效期判断与实际单价（T18）。
+// TestModelPricePromo 促销价的有效期判断与实际单价。
 func TestModelPricePromo(t *testing.T) {
 	now := int64(1_800_000_000)
 	p := &model.ModelPrice{PointsPerUnit: 10, MemberPointsPerUnit: 8, PromoPointsPerUnit: 5, PromoStartsAt: now - 10, PromoEndsAt: now + 10}

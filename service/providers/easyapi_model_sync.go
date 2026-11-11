@@ -17,7 +17,7 @@ import (
 //
 // 网关 /pricing/detail 的 params.<分类>.properties 对部分模型（2026-09 只有 Kling 系列）给出了结构化参数：
 // duration 的 enum 或 min/max、resolution 的 enum、输入类型里有没有 video、有没有 generate_audio。
-// 这些正好对应 model_price 上运营一直手填的 durations / resolutions / abilities。
+// 这些正好对应 model_price 上运营手填的 durations / resolutions / abilities。
 // 这里把它们翻译过来；网关没给的字段保持原样，运营手填的值默认不覆盖（force 才覆盖）。
 
 // 时长按 min~max 范围给出时最多展开多少档；再多说明是连续值，前端按输入框处理更合适，且 durations 列只有 60 字符

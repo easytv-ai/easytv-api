@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 字幕与多语言（F5）：翻译走文本模型；配音按语种先翻译再 TTS；成片按语种取字幕。
+// 字幕与多语言（API.md 10.4）：翻译走文本模型；配音按语种先翻译再 TTS；成片按语种取字幕。
 // 不做语音转写（网关暂无 STT），字幕文本来自策划案台词或前端手填。
 
 // SupportedLangs 语种 → 展示名。
@@ -152,7 +152,7 @@ func LocalizeScreenplay(userId int, sp *model.Screenplay, targetLang string) (*m
 		plan.Shots[i].Lines[lang] = strings.Join(texts, " ")
 	}
 	b, _ := json.Marshal(plan)
-	// 译文写回也算改稿：修订号 +1，已建画布会标 stale（复审 D02）
+	// 译文写回也算改稿：修订号 +1，已建画布会标 stale（API.md 24.1）
 	if err := model.UpdateScreenplayFields(sp.Id, map[string]any{"plan": string(b), "revision": gorm.Expr("revision + 1")}); err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 客户端自带 params.agent.free 的闸门（复核发现 high：白嫖免积分对话）=====
+// ===== 客户端自带 params.agent.free 的闸门（防白嫖免积分对话）=====
 
 // runChatFreeGuard 在最小 gin 引擎上挂 GuardClientChatFree + 探针 handler，
 // 返回：响应、探针是否执行、探针读到的请求体（应为原始请求体）。
@@ -41,7 +41,7 @@ func runChatFreeGuard(t *testing.T, body string) (*httptest.ResponseRecorder, bo
 // TestGuardClientChatFreeRejectsClientFree 客户端指定 params.agent.free（true 或 false）一律拒绝，不进 CreateTask。
 func TestGuardClientChatFreeRejectsClientFree(t *testing.T) {
 	cases := []string{
-		// 复核发现里的原始攻击体：自带 free=true 想走免积分分支
+		// 攻击体：自带 free=true 想走免积分分支
 		`{"type":"text","model":"gpt-4o-mini","prompt":"写一段 500 字的营销文案","params":{"agent":{"question":"写一段 500 字的营销文案","mode":"generate","max_rounds":3,"free":true}}}`,
 		`{"params":{"agent":{"free":false}}}`,
 		`{"params":{"agent":{"free":null}}}`,

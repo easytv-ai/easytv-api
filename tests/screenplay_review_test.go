@@ -12,7 +12,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-// 短剧复审（2026-09-15）D02 / D03 的接口级回归（API.md 24.1）。
+// 策划案改稿的接口级回归（API.md 24.1）：镜头数超限、revision / stale、同步到既有画布。
 
 const reviewPlanRaw = `{"title":"真相","style":"电影感","aspect":"16:9",
 "characters":[{"key":"c1","name":"男主","look":"黑衣"}],
@@ -25,7 +25,7 @@ func screenplayRow(revision, built int) *sqlmock.Rows {
 		AddRow(7, 1, 5, 29, "一句话", 30, reviewPlanRaw, model.ScreenplayStatusBuilt, revision, built)
 }
 
-// TestScreenplayUpdateRejectsOverLimit D03：13 镜的 PUT 返回明确错误（上限与实际数量），不落库。
+// TestScreenplayUpdateRejectsOverLimit 13 镜的 PUT 返回明确错误（上限与实际数量），不落库。
 func TestScreenplayUpdateRejectsOverLimit(t *testing.T) {
 	mock := initMockDB(t)
 	r := initTestRouter()
@@ -48,7 +48,7 @@ func TestScreenplayUpdateRejectsOverLimit(t *testing.T) {
 	}
 }
 
-// TestScreenplayUpdateBumpsRevision D02：保存 plan 后 revision +1，已建画布 → stale=true。
+// TestScreenplayUpdateBumpsRevision 保存 plan 后 revision +1，已建画布 → stale=true。
 func TestScreenplayUpdateBumpsRevision(t *testing.T) {
 	mock := initMockDB(t)
 	r := initTestRouter()
@@ -71,7 +71,7 @@ func TestScreenplayUpdateBumpsRevision(t *testing.T) {
 	}
 }
 
-// TestScreenplayBuildSync D02：已建画布 + sync=true → 按镜号同步到既有画布，built_revision 推到 revision；不带 sync 仍返回 existing 与 stale。
+// TestScreenplayBuildSync 已建画布 + sync=true → 按镜号同步到既有画布，built_revision 推到 revision；不带 sync 仍返回 existing 与 stale。
 func TestScreenplayBuildSync(t *testing.T) {
 	mock := initMockDB(t)
 	r := initTestRouter()

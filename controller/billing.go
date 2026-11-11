@@ -38,7 +38,7 @@ func GetBillingPlans(c *gin.Context) {
 	})
 }
 
-// billingPromoView 促销配置 + 会员日（M7 剩余项）。
+// billingPromoView 促销配置 + 会员日。
 func billingPromoView() map[string]any {
 	promo := model.GetBillingPromo()
 	b, _ := json.Marshal(promo)

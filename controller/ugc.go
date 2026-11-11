@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 站外投稿（API.md 8.5，T31）=====
+// ===== 站外投稿（API.md 8.5）=====
 
 // SubmitMyUgc POST /user/ugc
 func SubmitMyUgc(c *gin.Context) {

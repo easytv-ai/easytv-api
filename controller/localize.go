@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 字幕与多语言（API.md 10.4，F5）=====
+// ===== 字幕与多语言（API.md 10.4）=====
 
 // TranslateSubtitle POST /user/subtitle/translate { text, target_lang }
 func TranslateSubtitle(c *gin.Context) {

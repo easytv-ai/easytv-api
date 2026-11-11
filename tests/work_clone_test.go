@@ -14,7 +14,7 @@ func workRowCols() []string {
 	return []string{"id", "user_id", "title", "video_url", "status", "published_at", "canvas_id", "show_process", "source_canvas_id", "source_skill_id", "open_source", "clone_count"}
 }
 
-// TestCloneWorkRequiresOpenSource 非开源作品不能做同款（T5）。
+// TestCloneWorkRequiresOpenSource 非开源作品不能做同款。
 func TestCloneWorkRequiresOpenSource(t *testing.T) {
 	mock := initMockDB(t)
 	r := initTestRouter()

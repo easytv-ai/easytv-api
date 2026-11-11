@@ -15,7 +15,7 @@ type Work struct {
 	ProjectId   int  `json:"project_id" gorm:"default:0;comment:所属项目ID"`
 	CanvasId    int  `json:"canvas_id" gorm:"default:0;comment:发布时所在画布ID（制作过程）"`
 	ShowProcess bool `json:"show_process" gorm:"default:true;comment:播放页是否公开制作过程"`
-	// 做同款（T5）：开源作品允许他人把来源画布复制到自己的项目
+	// 做同款：开源作品允许他人把来源画布复制到自己的项目
 	SourceCanvasId int    `json:"source_canvas_id" gorm:"default:0;comment:做同款来源画布 ID（必须属于作者）"`
 	SourceSkillId  int    `json:"source_skill_id" gorm:"default:0;comment:使用的 Skill ID，0 无"`
 	OpenSource     int    `json:"open_source" gorm:"type:tinyint;index;default:0;comment:1 开源：允许他人做同款"`
@@ -234,7 +234,7 @@ type WorkFilter struct {
 	Category     string
 	Featured     *int
 	ReviewStatus *int
-	// Lang 语种过滤（F6）：zh 含空值（历史作品）
+	// Lang 语种过滤：zh 含空值（历史作品）
 	Lang string
 }
 

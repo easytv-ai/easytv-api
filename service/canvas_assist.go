@@ -98,8 +98,8 @@ type AssistChange struct {
 	Model     string         `json:"model,omitempty"`
 	Params    map[string]any `json:"params,omitempty"`
 	Points    int            `json:"points,omitempty"`
-	// Content / Graph 是给对话式工作流生成（API.md 32）新加的两个字段：
-	// add_node 的文本正文与 apply_graph 落下的整张图；老 assist 永远不会填它们。
+	// Content / Graph 只有对话式工作流生成（API.md 32）会填：
+	// add_node 的文本正文与 apply_graph 落下的整张图；画布助手不填。
 	Content string               `json:"content,omitempty"`
 	Graph   *CanvasWorkflowGraph `json:"graph,omitempty"`
 }

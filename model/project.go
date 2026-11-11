@@ -24,7 +24,7 @@ type Project struct {
 
 	// CanvasId 列表附带：该项目最近更新的画布 id（非表字段）
 	CanvasId int `json:"canvas_id" gorm:"-"`
-	// OpenComments 未解决批注数（F7，API.md 10.10；非表字段）
+	// OpenComments 未解决批注数（API.md 10.10；非表字段）
 	OpenComments int `json:"open_comments" gorm:"-"`
 	// OwnerNickname / TeamShared 团队视图用（非表字段）
 	OwnerNickname string `json:"owner_nickname,omitempty" gorm:"-"`

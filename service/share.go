@@ -9,7 +9,7 @@ import (
 	"easytv-api/setting"
 )
 
-// 分享回流奖励（T30）：播放页带 ref 打开时前端上报 share_open，作者按次得积分，日封顶。
+// 分享回流奖励：播放页带 ref 打开时前端上报 share_open，作者按次得积分，日封顶。
 
 // RewardShareOpen 在事件落表前调用（用已存事件做当日去重）。
 func RewardShareOpen(workId int, ref, anonId string, viewerId int) {

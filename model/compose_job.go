@@ -6,7 +6,7 @@ import (
 	"easytv-api/common"
 )
 
-// ComposeJob 成片合成任务（T24）：拼接镜头视频、烧字幕、混 BGM、免费用户加水印，输出进资产库。
+// ComposeJob 成片合成任务：拼接镜头视频、烧字幕、混 BGM、免费用户加水印，输出进资产库。
 type ComposeJob struct {
 	Id       int `json:"id"`
 	UserId   int `json:"user_id" gorm:"index"`
@@ -30,7 +30,7 @@ type ComposeJob struct {
 	Package     bool            `json:"package" gorm:"default:false"`
 	PackageJSON string          `json:"-" gorm:"type:text;comment:交付包各文件的资产 id 与地址"`
 	PackageView json.RawMessage `json:"package_files" gorm:"-"`
-	// BgmVolume 不带 gorm default：带 default 时 GORM 建行会略过零值、被库里的 0.2 顶掉，用户明确设成 0（静音）就丢了（复审 D07）
+	// BgmVolume 不带 gorm default：带 default 时 GORM 建行会略过零值、被库里的 0.2 顶掉，用户明确设成 0（静音）就丢了
 	BgmVolume     float64         `json:"bgm_volume"`
 	QC            string          `json:"-" gorm:"type:text;comment:合成后质检 JSON"`
 	QCView        json.RawMessage `json:"qc" gorm:"-"`
@@ -64,7 +64,7 @@ const (
 	AssetSourceCompose = "compose"
 )
 
-// ComposeClip 一个镜头片段。同一节点可以出现多次（时间线 A/B/A），ClipId 是时间线片段 id（复审 D04）。
+// ComposeClip 一个镜头片段。同一节点可以出现多次（时间线 A/B/A），ClipId 是时间线片段 id。
 type ComposeClip struct {
 	ClipId   string  `json:"clip_id,omitempty"`
 	NodeId   string  `json:"node_id"`
@@ -72,7 +72,7 @@ type ComposeClip struct {
 	Url      string  `json:"url"`
 	Duration float64 `json:"duration"`
 	Text     string  `json:"text"`
-	// 该镜头的独立配音（F05）：画布里「镜头视频 → 配音」连线上已生成的音频，合成时混进这一段
+	// 该镜头的独立配音：画布里「镜头视频 → 配音」连线上已生成的音频，合成时混进这一段
 	VoiceAssetId int    `json:"voice_asset_id,omitempty"`
 	VoiceUrl     string `json:"voice_url,omitempty"`
 	// VoiceSkipped 有配音但语种与成片语言不一致，没混进去（合成结果里提示）

@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 口令红包（T15）。领取：立即到账积分 + 建立首充加赠权益 + 赠会员天数；首充：支付履约后按比例加赠，封顶；过期由 RunBillingJobs 标记。
+// 口令红包。领取：立即到账积分 + 建立首充加赠权益 + 赠会员天数；首充：支付履约后按比例加赠，封顶；过期由 RunBillingJobs 标记。
 
 // BonusCodePreview GET /bonus-code/preview 响应。
 type BonusCodePreview struct {

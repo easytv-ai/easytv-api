@@ -6,8 +6,8 @@ import (
 )
 
 // compactAgentGraph 把模板 graph 压成模型「可抄的结构」：只留节点 id / kind / label / model / 短提示词与连线的 source→target，
-// 去掉坐标、尺寸、产物地址这些对搭图没用的字段。原来直接 clipRunes(graph, 2000) 会把 JSON 从中间切断，
-// 模型拿到的是不合法的 JSON 还被标成「可抄的结构」（复核发现）。
+// 去掉坐标、尺寸、产物地址这些对搭图没用的字段。不能直接按字符截断原 graph：会把 JSON 从中间切断，
+// 模型拿到的是不合法的 JSON 还被标成「可抄的结构」。
 // 压缩后仍超 max 时先去掉提示词再试，还超就按节点截断（保持合法 JSON，并在 note 里说明）。
 func compactAgentGraph(graph string, max int) string {
 	graph = strings.TrimSpace(graph)
@@ -19,7 +19,7 @@ func compactAgentGraph(graph string, max int) string {
 		Edges []map[string]any `json:"edges"`
 	}
 	if json.Unmarshal([]byte(graph), &g) != nil || len(g.Nodes) == 0 {
-		// 不是我们认识的结构：退回老的字符截断，至少不把整段塞进去
+		// 不是我们认识的结构：退回字符截断，至少不把整段塞进去
 		return clipRunes(graph, max)
 	}
 	nodes := make([]map[string]any, 0, len(g.Nodes))

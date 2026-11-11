@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 渠道伙伴计划（API.md 9.3，M12）=====
+// ===== 渠道伙伴计划（API.md 9.3）=====
 
 // ApplyPartner POST /user/partner/apply
 func ApplyPartner(c *gin.Context) {

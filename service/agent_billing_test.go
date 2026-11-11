@@ -239,10 +239,10 @@ func TestGetCanvasAgentStepsOrdering(t *testing.T) {
 	}
 }
 
-// ===== 免积分对话的新计费口径（契约第 4 / 5 / 8 条）=====
+// ===== 免积分对话的计费口径（契约第 4 / 5 / 8 条）=====
 //
-// 开关开启（缺省）时对话任务不再走积分：points_frozen 保持 0、不写 point_log、结算跳过（cost_points=0），
-// 改为一次每日对话次数；开关关闭时保持旧的按轮预扣与退差（TestSettleAgentLoopPaidTaskSettlesByRounds 覆盖退差口径）。
+// 开关开启（缺省）时对话任务不走积分：points_frozen 保持 0、不写 point_log、结算跳过（cost_points=0），
+// 只消费一次每日对话次数；开关关闭时按轮预扣与退差（TestSettleAgentLoopPaidTaskSettlesByRounds 覆盖退差口径）。
 
 // TestStartTaskFreeChatNoPoints 免费模式：StartTask 扣一次次数、不估价、不预扣积分、不写 point_log。
 // 任何计费分支被走到都会让 sqlmock 报未预期调用（model_price / point_lot / point_log），StartTask 随即报错。
@@ -280,7 +280,7 @@ func TestStartTaskFreeChatNoPoints(t *testing.T) {
 	}
 }
 
-// TestStartTaskPaidChatKeepsOldBilling ChatFreeEnabled=false：不消费次数，保持旧的按轮预扣
+// TestStartTaskPaidChatKeepsOldBilling ChatFreeEnabled=false：不消费次数，按轮预扣
 // （3 轮 → 预扣 3 分、写 freeze 流水与 points_frozen）。
 func TestStartTaskPaidChatKeepsOldBilling(t *testing.T) {
 	seedChatOffSettings(t)

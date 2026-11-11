@@ -68,7 +68,7 @@ var (
 )
 
 // ParseMarkdownPrompts 按标题切段，每段取第一个代码块当正文；
-// 没有代码块就退回段落纯文本。这是那几个开源提示词仓库 README 的通用长相。
+// 没有代码块就退回段落纯文本。开源提示词仓库的 README 普遍是这个结构。
 func ParseMarkdownPrompts(md string) []PromptItem {
 	locs := mdHeading.FindAllStringSubmatchIndex(md, -1)
 	out := []PromptItem{}

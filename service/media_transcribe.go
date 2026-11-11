@@ -19,7 +19,7 @@ import (
 	"easytv-api/setting"
 )
 
-// 语音转字幕（API.md 35，L8 落地部分）。
+// 语音转字幕（API.md 35）。
 //
 // 动作 transcribe 是 model 引擎（按 transcribe 能力位挑模型、按模型定价计费），
 // 但不走生成任务的提交路径：网关 /v1/audio/transcriptions 收的是音频文件而不是提示词，

@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Partner 渠道伙伴（M12）：MCN / 培训机构 / KOL / 开发者，带专属码与返佣。
+// Partner 渠道伙伴：MCN / 培训机构 / KOL / 开发者，带专属码与返佣。
 type Partner struct {
 	Id          int     `json:"id"`
 	UserId      int     `json:"user_id" gorm:"uniqueIndex"`

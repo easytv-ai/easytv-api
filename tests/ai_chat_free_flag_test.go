@@ -18,7 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 免积分标记只能由服务端写（复核发现 high / medium 的回归）=====
+// ===== 免积分标记只能由服务端写 =====
 //
 // 全部走 sqlmock + httptest（写法照 tests/agent_http_test.go / service/agent_billing_test.go）：
 // 不连库、不迁移、不写真实数据。没有登记的 SQL 会让 sqlmock 直接报错，
@@ -95,7 +95,7 @@ func agentParamsOf(t *testing.T, data map[string]any) map[string]any {
 	return agent
 }
 
-// TestCreateTaskRejectsClientFreeFlag 复核发现 high 的复现路径：登录用户自带 params.agent.free=true
+// TestCreateTaskRejectsClientFreeFlag 登录用户自带 params.agent.free=true
 // 打 POST /user/task，必须被拒——不估价、不入库、不提交网关。
 // 只登记鉴权查询：一旦请求走到定价 / 入库 / 扣分，sqlmock 会因未预期调用报错。
 func TestCreateTaskRejectsClientFreeFlag(t *testing.T) {
@@ -156,7 +156,7 @@ func TestCreateTaskHandlerRejectsAgentParams(t *testing.T) {
 	}
 }
 
-// TestCreateTaskRejectsCaseVariantAgentParams 复核发现 medium：encoding/json 的结构体解码大小写不敏感
+// TestCreateTaskRejectsCaseVariantAgentParams encoding/json 的结构体解码大小写不敏感
 // （IsAgentTask / IsFreeChatTask / GuardClientChatFree 都是），入口闸门必须同语义——否则
 // {"Agent":…} / {"AGENT":…} 能经 POST /user/task 建出 agent 任务：计价按 1 轮、实际跑最多 8 轮，
 // 还绕过 AgentEnabled 与画布入口校验。这里走真实路由（不带 free 时 GuardClientChatFree 会放行）。
@@ -273,7 +273,7 @@ func assertRetryReevaluatesFreeFlag(t *testing.T, srcParams string) {
 	}
 }
 
-// TestRetryAgentTaskReevaluatesFreeFlag 复核发现 medium 的复现路径：源任务 params.agent.free=true，
+// TestRetryAgentTaskReevaluatesFreeFlag 源任务 params.agent.free=true，
 // ChatFreeEnabled=false 时走通用重试，新任务的 free 必须按当前开关重估为 false 并走付费估价路径（预扣积分），
 // 而不是照抄旧值继续免单，也不是被拒绝（不打断用户在任务列表里的重试）。
 func TestRetryAgentTaskReevaluatesFreeFlag(t *testing.T) {
@@ -281,7 +281,7 @@ func TestRetryAgentTaskReevaluatesFreeFlag(t *testing.T) {
 		`{"agent":{"question":"做一条橘猫广告","mode":"generate","max_rounds":3,"free":true}}`)
 }
 
-// TestRetryCaseVariantAgentFreeReevaluated 复核发现 medium 的大小写变体：{"Agent":…,"Free":true} 在
+// TestRetryCaseVariantAgentFreeReevaluated 大小写变体：{"Agent":…,"Free":true} 在
 // encoding/json 的结构体解码里同样被 IsFreeChatTask 认成免费任务，重估必须用同一套大小写不敏感语义，
 // 否则开关关闭后重试它仍然免单（且不会按 agent.max_rounds 计价）。
 func TestRetryCaseVariantAgentFreeReevaluated(t *testing.T) {
@@ -315,7 +315,7 @@ func TestRewriteChatFreeFlag(t *testing.T) {
 	if bad := service.RewriteChatFreeFlag(`not json`, false); bad != `not json` {
 		t.Fatalf("非 JSON 原样返回：%s", bad)
 	}
-	// 大小写变体（复核发现 medium）：IsFreeChatTask 的结构体解码认 {"Agent":…,"Free":true}，
+	// 大小写变体：IsFreeChatTask 的结构体解码认 {"Agent":…,"Free":true}，
 	// 重估必须同语义，并把键统一成规范小写，避免新旧两份 agent 段并存。
 	rewritten := service.RewriteChatFreeFlag(`{"Agent":{"question":"做个片子","max_rounds":3,"Free":true}}`, false)
 	if strings.Contains(rewritten, `"Agent"`) || strings.Contains(rewritten, `"Free"`) {
@@ -390,7 +390,7 @@ func TestCanvasAgentTaskIsFreeAndCountsOnce(t *testing.T) {
 	}
 }
 
-// TestCreateBatchRejectsClientAgentParams 复核发现 high 的同类旁路：批量编排
+// TestCreateBatchRejectsClientAgentParams 批量入口的同类旁路：批量编排
 // POST /user/canvas/:id/batch 的条目 params 由客户端原样透传（service/batch.go:92-99 → :390），
 // worker 再经 batchSubmitter（:291-297）调 StartTask——不挡的话 params.agent.free=true 会直接命中
 // 免积分分支（service/task_start.go:35-36 → :87-97），ChatFreeEnabled=false 时也免单。
@@ -421,7 +421,7 @@ func TestCreateBatchRejectsClientAgentParams(t *testing.T) {
 	}
 }
 
-// TestCreateBatchRejectsCaseVariantAgentFree 复核发现 medium 的大小写变体也适用于批量入口：
+// TestCreateBatchRejectsCaseVariantAgentFree 大小写变体也适用于批量入口：
 // {"Agent":{"Free":true}} 会被 IsFreeChatTask 的结构体解码认成免费任务，批量条目不能只挡小写 agent 键，
 // 否则开关关闭时仍能经批量 worker → StartTask 免单。
 func TestCreateBatchRejectsCaseVariantAgentFree(t *testing.T) {
@@ -450,7 +450,7 @@ func TestCreateBatchRejectsCaseVariantAgentFree(t *testing.T) {
 	}
 }
 
-// TestCreateMediaJobRejectsClientAgentParams 复核发现 low 的覆盖缺口：媒体模型动作的 params 同样是
+// TestCreateMediaJobRejectsClientAgentParams 媒体模型动作的 params 同样是
 // 客户端透传（service/media.go:154-159），必须与通用建任务 / 批量入口同一口径拒绝 params.agent，
 // 否则模型目录变化（text 模型被打上媒体能力位）后会变成免积分旁路。
 // 只登记到拒绝点为止的查询：继续提交任务会因未预期调用报错。

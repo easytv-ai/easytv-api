@@ -310,7 +310,7 @@ func TestDecrChatUsage(t *testing.T) {
 	}
 }
 
-// TestRefundChatQuotaOnRefundsGivenDay 按消费日退还（复核发现 medium）：跨零点失败要退消费日，
+// TestRefundChatQuotaOnRefundsGivenDay 按消费日退还：跨零点失败要退消费日，
 // 不能退成退款时刻的今天；拿不到消费日（空串）就不动账，避免把别的日子减错。
 func TestRefundChatQuotaOnRefundsGivenDay(t *testing.T) {
 	mock := chatQuotaTestDB(t)

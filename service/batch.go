@@ -97,7 +97,7 @@ func CreateBatch(userId, teamId int, cv *model.Canvas, req BatchRequest) (*model
 			}
 			params = string(it.Params)
 		}
-		// 免积分标记只能由服务端写：批量条目也不能自带 params.agent（复核发现 high）。
+		// 免积分标记只能由服务端写：批量条目也不能自带 params.agent。
 		// 条目 params 会原样落库、由 worker 经 batchSubmitter 交给 StartTask，
 		// 不挡的话自带 free=true 的批量任务在 ChatFreeEnabled=false 时也免单（跳过估价与预扣）。
 		if err := CheckNoClientAgentParams(params); err != nil {

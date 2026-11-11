@@ -255,7 +255,7 @@ type gatewayModelImportItem struct {
 
 // AdminImportGatewayModels 把网关模型导入 model_price（POST /admin/gateway/models/import）。
 // 已存在的模型只补 label/type/unit（不动已调价格）；新模型必须带正积分，缺省或 0 的跳过并在 skipped_models 里返回，由运营手动定价。
-// 新模型默认按 GrowthNewModelPromo* 写入首发价（T18），请求 auto_promo=false 可关闭本次导入的自动首发价。
+// 新模型默认按 GrowthNewModelPromo* 写入首发价，请求 auto_promo=false 可关闭本次导入的自动首发价。
 func AdminImportGatewayModels(c *gin.Context) {
 	var req struct {
 		Models    []gatewayModelImportItem `json:"models"`

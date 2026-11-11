@@ -14,7 +14,7 @@ import (
 	"easytv-api/setting"
 )
 
-// Storage 文件存储抽象：本地磁盘先行，换 OSS/R2 时只需新增实现并在 InitStorage 中切换。
+// Storage 文件存储抽象；用哪个实现由 ApplyStorageConfig 决定。
 type Storage interface {
 	// Save 写入文件，返回可访问的 URL。key 形如 "2026/09/08/xxx.png"。
 	Save(key string, r io.Reader) (url string, err error)

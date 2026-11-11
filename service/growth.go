@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 增长域积分发放（T7）：礼包与任务。数值全部来自 setting.GetGrowthConfig()。
+// 增长域积分发放：礼包与任务。数值全部来自 setting.GetGrowthConfig()。
 // point_log 的 biz_no 记固定键（setting.GrowthReason*），reason 记给用户看的中文。
 
 // GiftPointsWithBiz 系统赠送，biz_no 可指定（GiftPoints 的 "gift" 太粗，增长域按键筛选）。

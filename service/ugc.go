@@ -11,7 +11,7 @@ import (
 	"easytv-api/setting"
 )
 
-// 站外发布返积分（T31）：用户提交平台链接，后台审核按时长档位发积分，破赞翻倍，月封顶。
+// 站外发布返积分：用户提交平台链接，后台审核按时长档位发积分，破赞翻倍，月封顶。
 
 func monthStart() int64 {
 	now := time.Now().In(model.CheckinLocation)

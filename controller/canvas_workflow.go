@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 工作流模板（API.md 31，L3）=====
+// ===== 工作流模板（API.md 31）=====
 
 // workflowGraph 只校验外形：节点非空、连线可缺省，其余字段原样存回，前端版本变了也不用改后端。
 type workflowGraph struct {

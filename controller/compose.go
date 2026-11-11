@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 成片合成（API.md 8.2，T24）=====
+// ===== 成片合成（API.md 8.2）=====
 
 // CreateCompose POST /user/canvas/:id/compose
 func CreateCompose(c *gin.Context) {

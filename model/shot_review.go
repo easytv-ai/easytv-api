@@ -32,7 +32,7 @@ const (
 	ShotReviewRejected = -1
 )
 
-// ShotReviewReasons 退回原因白名单（复审 G05 / G07）。
+// ShotReviewReasons 退回原因白名单。
 var ShotReviewReasons = []string{"identity", "performance", "lipsync", "composition", "continuity", "duration", "technical"}
 
 func IsShotReviewReason(v string) bool {

@@ -224,7 +224,7 @@ func defaultTimelineClip(s Shot) model.TimelineClip {
 }
 
 // MergeTimeline 保存过的时间线与当前画布对齐：删掉节点已不存在的片段，还没有任何片段引用的新镜头追加在末尾（有视频就启用）。
-// 同一节点的多条片段（A/B/A）全部保留，去重交给 Normalize 按片段 id 做（复审 D04）。
+// 同一节点的多条片段（A/B/A）全部保留，去重交给 Normalize 按片段 id 做。
 func MergeTimeline(saved *model.Timeline, shots []Shot) *model.Timeline {
 	exists := map[string]Shot{}
 	for _, s := range shots {

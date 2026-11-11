@@ -9,7 +9,7 @@ import (
 	"easytv-api/model"
 )
 
-// 宫格切分（L4，API.md 23.3 grid_split）：一张宫格图按前端拖好的分割线切成 N 片，一次作业出 N 个产物。
+// 宫格切分（API.md 23.3 grid_split）：一张宫格图按前端拖好的分割线切成 N 片，一次作业出 N 个产物。
 // 不在浏览器里裁：OSS 图片没有 CORS 头，canvas 读不到像素；也不拆成 N 个 crop 作业：
 // 单用户排队上限 3 个，九宫格就会被挡。
 

@@ -9,7 +9,7 @@ import (
 	"easytv-api/setting"
 )
 
-// 会员日（M7 剩余项）：每月固定一天积分包打折，/billing/plans 下发，报价与下单自动应用。
+// 会员日：每月固定一天积分包打折，/billing/plans 下发，报价与下单自动应用。
 
 // MemberDay /billing/plans.promo.member_day。
 type MemberDay struct {

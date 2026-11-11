@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Screenplay 成片工作室的策划案（T23）：一句话 / 剧本 → 结构化 plan → 建画布。
+// Screenplay 成片工作室的策划案：一句话 / 剧本 → 结构化 plan → 建画布。
 type Screenplay struct {
 	Id            int    `json:"id"`
 	UserId        int    `json:"user_id" gorm:"index"`
@@ -109,7 +109,7 @@ type PlanShot struct {
 	Motion     string   `json:"motion"`
 	Line       string   `json:"line"`
 	Seconds    int      `json:"seconds"`
-	// Lines 多语言台词（F5）：语种 → 译文，缺失回退 Line
+	// Lines 多语言台词：语种 → 译文，缺失回退 Line
 	Lines map[string]string `json:"lines,omitempty"`
 	// Dialogue 对白条目（API.md 25.1）：非空时 Line 由它拼出（各条正文用空格连接），配音按条分段、字幕按条出
 	Dialogue []PlanLine `json:"dialogue,omitempty"`
@@ -140,10 +140,10 @@ func (p *Plan) SpeakerName(speaker string) string {
 
 var ErrPlanInvalid = errors.New("策划案格式不正确")
 
-// ErrPlanLimit 超出上限（镜头 / 人物 / 场景）。原稿保持不动，不再静默截断（复审 D03）。
+// ErrPlanLimit 超出上限（镜头 / 人物 / 场景）。原稿保持不动，不静默截断。
 var ErrPlanLimit = errors.New("策划案超出上限")
 
-// ErrPlanRef 镜头引用了不存在的人物 / 场景（复审 D03）。
+// ErrPlanRef 镜头引用了不存在的人物 / 场景。
 var ErrPlanRef = errors.New("策划案引用不存在")
 
 // Normalize 裁剪文本长度、补默认值、校验上限与引用；返回错误表示不可用，出错时不修改 p 的镜头 / 人物 / 场景数量。

@@ -14,7 +14,7 @@ import (
 	"easytv-api/model"
 )
 
-// 分镜组拼接（L4，API.md 23.3 montage）：把多张图按行列拼成一张宫格大图，本地 ffmpeg，免费。
+// 分镜组拼接（API.md 23.3 montage）：把多张图按行列拼成一张宫格大图，本地 ffmpeg，免费。
 //
 // 作业壳只有一个 source_asset_id，多图走 params.asset_ids（有序，含源素材本身）；
 // 归属在创建时逐张校验，worker 里只按 id 取。拼法：每张先缩放并补边到同一格子尺寸

@@ -259,7 +259,7 @@ func parseParams(raw string) taskParams {
 // imageSizeFor 按模型族与清晰度推图片尺寸（任务没显式传 size 时）。
 //   - gpt-image 系只收 1024x1024 / 1536x1024 / 1024x1536（1792 是 DALL·E 3 的尺寸，edits 会回 400）；
 //   - dall-e 沿用 1792x1024 / 1024x1792；
-//   - 其他（seedream / qwen-image / gemini 等）：清晰度 2K 时给 2K 像素尺寸，否则沿用原来的映射。
+//   - 其他（seedream / qwen-image / gemini 等）：清晰度 2K 时给 2K 像素尺寸，否则按比例映射（sizeFromRatio）。
 func imageSizeFor(modelName, ratio, clarity string) string {
 	m := strings.ToLower(modelName)
 	if i := strings.LastIndex(m, "/"); i >= 0 {
@@ -398,8 +398,8 @@ func (p *EasyAPIProvider) Chat(modelName, prompt string) (string, error) {
 	return p.ChatWithOptions(modelName, prompt, service.ChatParams{})
 }
 
-// chatRequestBody 组装 /v1/chat/completions 请求体。ChatParams 全零时只有 model + messages，
-// 与历史请求逐字段一致；只有配置非空时才追加可选字段（网关（OpenAI 兼容）对未知字段是静默忽略）。
+// chatRequestBody 组装 /v1/chat/completions 请求体。ChatParams 全零时只有 model + messages；
+// 配置非空才追加可选字段（OpenAI 兼容网关对未知字段静默忽略）。
 func chatRequestBody(modelName, prompt string, opts service.ChatParams) map[string]any {
 	body := map[string]any{
 		"model":    modelName,
@@ -490,7 +490,7 @@ func chatImageUrl(a *model.Asset) (string, error) {
 func (p *EasyAPIProvider) runText(task *model.GenerationTask) {
 	// 对话式工作流生成（API.md 32）：一个任务里跑多轮 ReAct，循环自己结束任务（成功/失败/退差）。
 	if service.IsAgentTask(task) {
-		service.RunAgentLoop(task, p) // *EasyAPIProvider 满足 service.AgentChatter（Chat，easyapi.go:397）
+		service.RunAgentLoop(task, p) // *EasyAPIProvider 满足 service.AgentChatter
 		return
 	}
 	refs, _, err := imageTaskRefs(task)

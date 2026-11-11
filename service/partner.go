@@ -12,7 +12,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// 渠道伙伴计划（M12）：申请与审核、注册归因、充值返佣（记人民币入 quota，复用现有提现）。
+// 渠道伙伴计划（API.md 9.3）：申请与审核、注册归因、充值返佣（记人民币入 quota，复用现有提现）。
 
 // ApplyPartner 提交申请；已申请过返回当前记录。
 func ApplyPartner(userId int, name, kind, contact, intro string) (*model.Partner, error) {

@@ -146,7 +146,7 @@ func TestParseAgentReplyApplyGraph(t *testing.T) {
 	}
 }
 
-// TestParseAgentReplyAddNodeCarriesNewFields add_node 的 model / params / content 三个新字段要透传，
+// TestParseAgentReplyAddNodeCarriesNewFields add_node 的 model / params / content 三个字段要透传，
 // params 只留白名单键。
 func TestParseAgentReplyAddNodeCarriesNewFields(t *testing.T) {
 	raw := `{"reply":"补两个节点","changes":[
@@ -324,8 +324,8 @@ func TestBuildAgentPromptCarriesContext(t *testing.T) {
 }
 
 // TestBuildAgentPlanKeepsModeOnModelSwitch 换模型时保留的参数要逐键各判各的：
-// 以前条件对 mode 也看 params["edit"]，没有 edit 键的 i2v 节点换完模型 mode 就没了，
-// 图生视频会退回默认的 reference（文生视频），积分照扣。
+// mode 不能跟着 params["edit"] 一起判：否则没有 edit 键的 i2v 节点换完模型会丢 mode，
+// 图生视频退回默认的 reference（文生视频），积分照扣。
 func TestBuildAgentPlanKeepsModeOnModelSwitch(t *testing.T) {
 	nodes := map[string]assistNodeRef{
 		"n9": {Id: "n9", Kind: "video", Label: "主镜头",

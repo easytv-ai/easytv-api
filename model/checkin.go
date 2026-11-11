@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Checkin 每日签到记录（T10）：一人一天一行，day 按 Asia/Shanghai 取 yyyy-mm-dd。
+// Checkin 每日签到记录：一人一天一行，day 按 Asia/Shanghai 取 yyyy-mm-dd。
 type Checkin struct {
 	Id        int    `json:"id"`
 	UserId    int    `json:"user_id" gorm:"uniqueIndex:idx_checkin_user_day,priority:1"`

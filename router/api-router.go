@@ -140,7 +140,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.DELETE("/project/:id", controller.TrashProject)
 				selfRoute.POST("/project/:id/restore", controller.RestoreProject)
 				selfRoute.POST("/project/:id/move", controller.MoveProject) // 项目换空间（API.md 20）
-				// 项目评论批注（F7，API.md 10.10）
+				// 项目评论批注（API.md 10.10）
 				selfRoute.GET("/project/:id/comment", controller.GetProjectComments)
 				selfRoute.POST("/project/:id/comment", controller.CreateProjectComment)
 				selfRoute.PUT("/project/comment/:id", controller.UpdateProjectComment)
@@ -265,13 +265,13 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.DELETE("/subject/:id", controller.DeleteMySubject)
 				selfRoute.POST("/subject/:id/generate", middleware.UserCriticalRateLimit("task"), controller.GenerateSubjectViews)
 				selfRoute.POST("/subject/:id/sync", controller.SyncMySubjectRefs)
-				// 工作流模板（API.md 31，L3）
+				// 工作流模板（API.md 31）
 				selfRoute.GET("/workflow", controller.GetMyWorkflows)
 				selfRoute.POST("/workflow", controller.CreateMyWorkflow)
 				selfRoute.GET("/workflow/:id", controller.GetMyWorkflow)
 				selfRoute.PUT("/workflow/:id", controller.UpdateMyWorkflow)
 				selfRoute.DELETE("/workflow/:id", controller.DeleteMyWorkflow)
-				// 我的风格（API.md 34.5，L18）
+				// 我的风格（API.md 34.5）
 				selfRoute.GET("/style", controller.GetMyStyles)
 				selfRoute.POST("/style", controller.CreateMyStyle)
 				selfRoute.PUT("/style/:id", controller.UpdateMyStyle)

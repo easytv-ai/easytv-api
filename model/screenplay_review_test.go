@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// 短剧复审（2026-09-15）回归：D02 stale / D03 超限与引用校验。
+// 回归：stale / 超限与引用校验。
 
 func reviewPlan(shots, chars, scenes int) Plan {
 	p := Plan{}
@@ -22,7 +22,7 @@ func reviewPlan(shots, chars, scenes int) Plan {
 	return p
 }
 
-// TestPlanNormalizeRejectsOverLimit D03：13 镜 / 5 人 / 5 场景不再静默截成 12/4/4，而是明确报错且原稿不动。
+// TestPlanNormalizeRejectsOverLimit 13 镜 / 5 人 / 5 场景不静默截成 12/4/4，明确报错且原稿不动。
 func TestPlanNormalizeRejectsOverLimit(t *testing.T) {
 	cases := []struct {
 		name                  string
@@ -55,7 +55,7 @@ func TestPlanNormalizeRejectsOverLimit(t *testing.T) {
 	}
 }
 
-// TestPlanNormalizeRejectsMissingRefs D03：镜头引用了不存在的人物 / 场景要指出是哪一镜引用了什么。
+// TestPlanNormalizeRejectsMissingRefs 镜头引用了不存在的人物 / 场景要指出是哪一镜引用了什么。
 func TestPlanNormalizeRejectsMissingRefs(t *testing.T) {
 	p := reviewPlan(3, 2, 2)
 	p.Shots[1].Characters = []string{"c1", "c5"}
@@ -78,7 +78,7 @@ func TestPlanNormalizeRejectsMissingRefs(t *testing.T) {
 	}
 }
 
-// TestScreenplayStale D02：已建画布且 revision != built_revision 才是 stale。
+// TestScreenplayStale 已建画布且 revision != built_revision 才是 stale。
 func TestScreenplayStale(t *testing.T) {
 	sp := &Screenplay{Status: ScreenplayStatusBuilt, CanvasId: 3, Revision: 2, BuiltRevision: 1, Plan: "{}"}
 	sp.FillView()

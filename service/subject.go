@@ -9,7 +9,7 @@ import (
 	"easytv-api/model"
 )
 
-// 主体库（F2）：角色 / 场景 / 道具的参考图与描述，画布任务与策划案引用它保持一致性。
+// 主体库：角色 / 场景 / 道具的参考图与描述，画布任务与策划案引用它保持一致性。
 
 // TeamIdOf 用户所属团队（不在团队里返回 0）。
 func TeamIdOf(userId int) int {
@@ -376,7 +376,7 @@ func ApplySubjectsToTask(userId, teamId int, ids []int, prompt, inputsJSON strin
 }
 
 // CanAccessProject 项目可见性（API.md 10.10 / 20）：作者本人，或项目在团队空间（team_id>0）且用户是该团队成员。
-// 队友的个人项目不再可见。项目不存在与无权访问都返回 false，调用方统一回「项目不存在或无权访问」，不区分两者。
+// 队友的个人项目不可见。项目不存在与无权访问都返回 false，调用方统一回「项目不存在或无权访问」，不区分两者。
 func CanAccessProject(userId, projectId int) (*model.Project, bool) {
 	if userId <= 0 || projectId <= 0 {
 		return nil, false

@@ -14,7 +14,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-// TestSkillTeamShareQuery 我的技能列表带 team_id 时，SQL 要同时取自己的和团队共享的（F7，API.md 10.10）。
+// TestSkillTeamShareQuery 我的技能列表带 team_id 时，SQL 要同时取自己的和团队共享的（API.md 10.10）。
 func TestSkillTeamShareQuery(t *testing.T) {
 	mock := initMockDB(t)
 	userId := 8
@@ -308,7 +308,7 @@ func teammateCanvasExpect(mock sqlmock.Sqlmock, projectTeam int, perm string) {
 	}
 }
 
-// TestTeammateCanvasReadonly 团队空间项目的画布：查看者只读打开（F09），不带分享 token、不外露邮箱。
+// TestTeammateCanvasReadonly 团队空间项目的画布：查看者只读打开，不带分享 token、不外露邮箱。
 func TestTeammateCanvasReadonly(t *testing.T) {
 	mock := initMockDB(t)
 	r := initTestRouter()

@@ -126,7 +126,7 @@ func GetPublicWork(c *gin.Context) {
 	common.ApiSuccess(c, w)
 }
 
-// validateWorkSource 做同款来源校验（T5）：来源画布必须属于发布者；Skill 必须是官方或自己的；开源必须有来源画布。
+// validateWorkSource 做同款来源校验：来源画布必须属于发布者；Skill 必须是官方或自己的；开源必须有来源画布。
 func validateWorkSource(userId, sourceCanvasId, sourceSkillId, openSource int) string {
 	if openSource != 0 && openSource != 1 {
 		return "open_source 只能是 0 或 1"
@@ -253,11 +253,11 @@ func CreateWork(c *gin.Context) {
 		Category    string `json:"category"`
 		CanvasId    int    `json:"canvas_id"`
 		ShowProcess *bool  `json:"show_process"`
-		// 做同款（T5）
+		// 做同款
 		SourceCanvasId int  `json:"source_canvas_id"`
 		SourceSkillId  int  `json:"source_skill_id"`
 		OpenSource     *int `json:"open_source"`
-		// Lang 作品语种（F6）：前端按界面语言传
+		// Lang 作品语种：前端按界面语言传
 		Lang string `json:"lang"`
 	}
 	if err := common.DecodeJson(c.Request.Body, &req); err != nil {
@@ -346,7 +346,7 @@ func CreateWork(c *gin.Context) {
 		go service.SnapshotWorkTemplate(w.Id, w.UserId, w.SourceCanvasId)
 	}
 	service.TrackOnce(w.UserId, model.TrackEventFirstWork, map[string]any{"work_id": w.Id})
-	// 关注的作者发新作品：给粉丝发站内信（M11）
+	// 关注的作者发新作品：给粉丝发站内信
 	go NotifyFollowersNewWork(w, authorDisplayName(userId))
 	common.ApiSuccess(c, w)
 }
@@ -374,7 +374,7 @@ func UpdateMyWork(c *gin.Context) {
 		Category    *string `json:"category"`
 		Status      *int    `json:"status"`
 		ShowProcess *bool   `json:"show_process"`
-		// 做同款（T5）
+		// 做同款
 		SourceCanvasId *int `json:"source_canvas_id"`
 		SourceSkillId  *int `json:"source_skill_id"`
 		OpenSource     *int `json:"open_source"`
@@ -535,7 +535,7 @@ func GetWorkProcess(c *gin.Context) {
 		respondModelError(c, err, "查询失败")
 		return
 	}
-	// 开源作品（T5）制作过程一律可看，没填制作画布时用来源画布；非开源保持原策略
+	// 开源作品制作过程一律可看，没填制作画布时用来源画布；非开源保持原策略
 	canvasId := w.CanvasId
 	if canvasId == 0 && w.CanClone() {
 		canvasId = w.SourceCanvasId

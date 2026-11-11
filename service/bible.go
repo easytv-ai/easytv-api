@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// 剧集圣经（API.md 27，复审 G01）：贯穿全剧的叙事结构与连续性记录。
+// 剧集圣经（API.md 27）：贯穿全剧的叙事结构与连续性记录。
 //   - BibleContextPrompt：新一集生成策划案时把设定塞进提示词，沿用人物 key、关系、道具归属、未解决线索；
 //   - ImpactAnalysis：改人物 / 道具 / 事实时，列出受影响的集、场、镜；
 //   - GenerateEpisodeRecord：用文本模型把一集的策划案总结成连续性记录，并入圣经。

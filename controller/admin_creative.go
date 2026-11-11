@@ -400,7 +400,7 @@ func AdminGetWorks(c *gin.Context) {
 	filter := model.WorkFilter{
 		UserId:  queryInt(c, "user_id", 0),
 		Keyword: strings.TrimSpace(c.Query("keyword")),
-		Lang:    service.NormalizeLang(c.Query("lang")), // 语种过滤（F6 出海）
+		Lang:    service.NormalizeLang(c.Query("lang")), // 语种过滤（出海）
 	}
 	if raw := strings.TrimSpace(c.Query("status")); raw != "" {
 		status := queryInt(c, "status", 0)

@@ -12,7 +12,7 @@ import (
 
 // ===== 对话式工作流生成：动作 JSON 契约、回复解析、计划装配（API.md 32，agent-contract 2.4 / 第 3 / 9 节）=====
 
-// AssistActionApplyGraph 新动作：一次落下一整张工作流（只有 /agent 会发）。
+// AssistActionApplyGraph 一次落下一整张工作流（只有 /agent 会发）。
 const AssistActionApplyGraph = "apply_graph"
 
 // ===== 动作 JSON 契约类型（与前端 CanvasWorkflowGraph 同构）=====
@@ -104,7 +104,7 @@ type AgentPlan struct {
 
 // ===== 解析 =====
 
-// AgentPricer 给 regenerate 挑模型并估价。方法集与现有的 assistPricer 完全一致，
+// AgentPricer 给 regenerate 挑模型并估价。方法集与 assistPricer 完全一致，
 // 所以 dbAssistPricer 同时满足两者；导出是为了让 tests/agent_eval 这类外部包能注入假实现。
 type AgentPricer interface {
 	Resolve(taskType, wanted, last, paramsJSON string) (modelName string, points int, err error)
@@ -242,7 +242,7 @@ func ParseAgentReply(raw string, nodes map[string]assistNodeRef, opts AgentParse
 	return res
 }
 
-// parseAgentSmallChange 四个旧动作的解析与校验（不查库、不估价的部分）。
+// parseAgentSmallChange 四个小改动作（apply_graph 以外）的解析与校验（不查库、不估价的部分）。
 func parseAgentSmallChange(rc rawAgentChange, action string, nodes map[string]assistNodeRef) (AssistChange, bool) {
 	c := AssistChange{Action: action, Reason: clipRunes(rc.Reason, 200)}
 	switch action {
@@ -599,7 +599,7 @@ func BuildAgentPrompt(in AgentPromptInput) string {
 	if in.MaxRounds > 0 {
 		parts = append(parts, fmt.Sprintf("【进度】第 %d/%d 轮；第 %d 轮必须给出最终计划。", in.Round, in.MaxRounds, in.MaxRounds))
 	}
-	// 平台知识 / 平台事实：为空时整段不输出，老调用点的提示词结构保持不变。
+	// 平台知识 / 平台事实：为空时整段不输出，不传它们的调用点提示词结构不变。
 	if strings.TrimSpace(in.Knowledge) != "" {
 		parts = append(parts, "【平台知识】\n"+in.Knowledge)
 	}

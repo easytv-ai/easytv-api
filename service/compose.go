@@ -19,7 +19,7 @@ import (
 	"easytv-api/setting"
 )
 
-// 成片合成（T24）：把画布里已生成的镜头视频按顺序拼接，烧字幕、混 BGM、免费用户加水印，输出进资产库。
+// 成片合成：把画布里已生成的镜头视频按顺序拼接，烧字幕、混 BGM、免费用户加水印，输出进资产库。
 // 合成不计积分；worker 并发 2，单任务超时 10 分钟。
 
 const (
@@ -37,10 +37,10 @@ type ComposeRequest struct {
 	ClipOrder  []string `json:"clip_order"`
 	Subtitles  *bool    `json:"subtitles"`
 	BgmAssetId int      `json:"bgm_asset_id"`
-	// Voice 是否把镜头的独立配音混进成片（F05），缺省 true
+	// Voice 是否把镜头的独立配音混进成片（API.md 11.5），缺省 true
 	Voice        *bool `json:"voice"`
 	ScreenplayId int   `json:"screenplay_id"`
-	// 多语言成片（F5）：lang 指定语种，subtitle_text 给整份 SRT（优先）
+	// 多语言成片（API.md 10.4）：lang 指定语种，subtitle_text 给整份 SRT（优先）
 	Lang         string `json:"lang"`
 	SubtitleText string `json:"subtitle_text"`
 	// Timeline 按时间线合成（API.md 12.3）：给了就只合启用的镜头，顺序 / 候选 / 入出点 / 音量 / 逐镜字幕 / 画幅 / 分辨率 / BGM 都以它为准，
@@ -361,7 +361,7 @@ func runComposeJob(j *model.ComposeJob) {
 		return
 	}
 	bgmUrl := ""
-	// 音量明确为 0 的 BGM 不混（复审 D07）：不下载也不进滤镜
+	// 音量明确为 0 的 BGM 不混（API.md 24.6）：不下载也不进滤镜
 	if j.BgmAssetId > 0 && j.BgmVolume != 0 {
 		if a, err := model.GetUserAsset(j.UserId, j.BgmAssetId); err == nil {
 			bgmUrl = a.Url
@@ -444,7 +444,7 @@ type renderOptions struct {
 	Subtitles          bool
 	SubtitleText       string
 	BgmUrl             string
-	// BgmVolume 负数表示未设置（回落 0.2）；0 表示静音，此时 BgmUrl 不会被混入（复审 D07）
+	// BgmVolume 负数表示未设置（回落 0.2）；0 表示静音，此时 BgmUrl 不会被混入（API.md 24.6）
 	BgmVolume float64
 	Watermark bool
 	JobId     int
@@ -500,7 +500,7 @@ func renderCompose(ctx context.Context, dir string, clips []model.ComposeClip, o
 		if dur <= 0 {
 			dur = 5
 		}
-		// 入出点裁切：钳在素材时长内，至少留 0.3 秒。seg 是用户选定的画面段长，渲染时先严格截到 [in, in+seg]（复审 D01）
+		// 入出点裁切：钳在素材时长内，至少留 0.3 秒。seg 是用户选定的画面段长，渲染时先严格截到 [in, in+seg]（API.md 24.7）
 		in, seg := trimRange(clips[i].In, clips[i].Out, dur)
 		dur = seg
 		voice := ""
@@ -669,7 +669,7 @@ func renderVoiceTrack(ctx context.Context, dir string, parts []voiceTrackPart) (
 	return out, nil
 }
 
-// resolveBgm 区分「未设置」与「明确为 0」（复审 D07）：音量负数（未设置）回落 0.2；0 表示静音，直接不混 BGM（返回空地址）。
+// resolveBgm 区分「未设置」与「明确为 0」（API.md 24.6）：音量负数（未设置）回落 0.2；0 表示静音，直接不混 BGM（返回空地址）。
 func resolveBgm(url string, volume float64) (string, float64) {
 	if volume < 0 {
 		volume = 0.2
@@ -724,7 +724,7 @@ func finalPassArgs(in, out, srt, bgm string, bgmVolume float64, watermark bool, 
 		if fade < 0 {
 			fade = 0
 		}
-		// amix duration=first 让混音跟随成片音轨长度，不再用 -t 截断（避免尾帧被切）
+		// amix duration=first 让混音跟随成片音轨长度；不用 -t 截断，会切掉尾帧
 		fc := fmt.Sprintf("[1:a]volume=%.2f,afade=t=out:st=%.1f:d=3[bg];[0:a][bg]amix=inputs=2:duration=first:dropout_transition=2:normalize=0[a]", bgmVolume, fade)
 		if len(vf) > 0 {
 			fc += ";[0:v]" + strings.Join(vf, ",") + "[v]"
@@ -761,7 +761,7 @@ type clipRender struct {
 }
 
 // normalizeClip 统一分辨率（等比缩放 + 黑边）、30fps、AAC 立体声；无音轨的补静音。
-// 先把画面与原声严格截到 [in, in+seg]，再对截断后的画面 tpad 冻结末帧到 dur（复审 D01）：
+// 先把画面与原声严格截到 [in, in+seg]，再对截断后的画面 tpad 冻结末帧到 dur（API.md 24.7）：
 // 不管配音多长，原出点之后的素材都不会出现。voice 非空时混入配音（配音延后 0.15 秒）。
 func normalizeClip(ctx context.Context, src, dst string, w, h int, r clipRender) error {
 	seg := r.seg
@@ -925,7 +925,7 @@ func clipDurationWithVoice(videoDur, voiceDur float64) float64 {
 	return need
 }
 
-// BuildSRT 每段台词铺满该段时长（导出供测试）。字幕两端内缩 srtInset，短片段按比例缩小，保证 start < end（复审 D06）。
+// BuildSRT 每段台词铺满该段时长（导出供测试）。字幕两端内缩 srtInset，短片段按比例缩小，保证 start < end（API.md 24.5）。
 func BuildSRT(clips []model.ComposeClip) string {
 	var b strings.Builder
 	t := 0.0

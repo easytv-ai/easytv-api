@@ -34,10 +34,10 @@ type Skill struct {
 	Status       int    `json:"status" gorm:"index;default:1;comment:1=已上架 2=已下架"`
 	Graph        string `json:"-" gorm:"type:longtext;comment:画布模板 JSON（从画布存为 Skill 时写入，已去掉任务与资产 ID）"`
 	GraphNodes   int    `json:"graph_nodes" gorm:"default:0;comment:画布模板节点数，0 表示只有提示词"`
-	// 团队共享（F7，API.md 10.10）：shared=1 时 team_id 为作者当时所在团队
+	// 团队共享（API.md 10.10）：shared=1 时 team_id 为作者当时所在团队
 	TeamId int `json:"team_id" gorm:"index;default:0;comment:共享给哪个团队"`
 	Shared int `json:"shared" gorm:"default:0;comment:1=共享给团队"`
-	// 上架审核与分成（T26）；官方技能 review_status 恒为 2
+	// 上架审核与分成；官方技能 review_status 恒为 2
 	ReviewStatus int            `json:"review_status" gorm:"index;default:0;comment:0 私有 1 待审 2 已上架 3 驳回"`
 	ReviewRemark string         `json:"review_remark" gorm:"type:varchar(255);default:''"`
 	SubmittedAt  int64          `json:"submitted_at" gorm:"bigint;default:0"`
@@ -151,7 +151,7 @@ type SkillFilter struct {
 	Status        *int
 	// UserId 非 nil 时按所有者过滤：0 只取官方；-1 取所有用户私有（user_id > 0）；正数只取该用户的私有 Skill
 	UserId *int
-	// TeamId > 0 且 UserId 为正数时，额外取该团队里其他成员共享的技能（F7，API.md 10.10）
+	// TeamId > 0 且 UserId 为正数时，额外取该团队里其他成员共享的技能（API.md 10.10）
 	TeamId int
 }
 

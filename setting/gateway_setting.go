@@ -8,7 +8,7 @@ import (
 )
 
 // EasyAPI 大模型网关配置（DB setting 表，PascalCase 键，管理端 /admin/gateway/config 可热更新）。
-// 环境变量 EASYAPI_* 仅作首次启动的迁移 fallback（见 model.SeedModelsFromEnvIfEmpty），不再参与运行期生成。
+// 环境变量 EASYAPI_* 仅作首次启动的迁移 fallback（见 model.SeedModelsFromEnvIfEmpty），不参与运行期生成。
 const (
 	// EasyAPIGatewayBaseUrl 网关地址，缺省 https://api.easyapi.com。
 	EasyAPIGatewayBaseUrl = "EasyAPIGatewayBaseUrl"

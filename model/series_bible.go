@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// SeriesBible 剧集圣经（API.md 27，复审 G01）：一个项目一份，贯穿全剧的人物关系与知情、道具归属、伏笔线索、每集记录。
+// SeriesBible 剧集圣经（API.md 27）：一个项目一份，贯穿全剧的人物关系与知情、道具归属、伏笔线索、每集记录。
 // 单独成表而不是塞进 project：内容会随集数增长，且要有自己的修订号做乐观锁。
 type SeriesBible struct {
 	Id        int    `json:"id"`

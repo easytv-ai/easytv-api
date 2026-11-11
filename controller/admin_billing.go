@@ -391,7 +391,7 @@ type modelPricePayload struct {
 	PointsPerUnit       *int    `json:"points_per_unit"`
 	MemberPointsPerUnit *int    `json:"member_points_per_unit"`
 	Status              *int    `json:"status"`
-	// 促销价（T18）：promo_points_per_unit 置 0 即取消促销
+	// 促销价：promo_points_per_unit 置 0 即取消促销
 	PromoPointsPerUnit *int    `json:"promo_points_per_unit"`
 	PromoLabel         *string `json:"promo_label"`
 	PromoStartsAt      *int64  `json:"promo_starts_at"`
@@ -582,7 +582,7 @@ func AdminCreateModelPrice(c *gin.Context) {
 	if v, ok := f["promo_ends_at"].(int64); ok {
 		p.PromoEndsAt = v
 	}
-	// 能力标签 / 时长档 / 分辨率 / 首帧适配 / 图片输入：新建时原来被丢掉，运营勾了标签保存后仍是空（2026-09-24 实测发现）
+	// 能力标签 / 时长档 / 分辨率 / 首帧适配 / 图片输入：新建时也要落库，漏掉的话运营勾了标签保存后仍是空
 	if v, ok := f["abilities"].(string); ok {
 		p.Abilities = v
 	}

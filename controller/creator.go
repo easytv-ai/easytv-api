@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 技能上架与创作者分成（API.md 8.3，T26）=====
+// ===== 技能上架与创作者分成（API.md 8.3）=====
 
 // SubmitMySkill POST /user/skill/:id/submit
 func SubmitMySkill(c *gin.Context) {

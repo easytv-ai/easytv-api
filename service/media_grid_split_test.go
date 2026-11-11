@@ -10,7 +10,7 @@ import (
 	"easytv-api/model"
 )
 
-// ===== 宫格切分（L4，API.md 23.3 grid_split）=====
+// ===== 宫格切分（API.md 23.3 grid_split）=====
 
 func TestParseGridCells(t *testing.T) {
 	cell := func(x, y, w, h float64) map[string]any { return map[string]any{"x": x, "y": y, "w": w, "h": h} }

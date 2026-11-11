@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// ProjectComment 项目评论批注（F7，API.md 10.10）：团队成员在项目或画布节点上留言。
+// ProjectComment 项目评论批注（API.md 10.10）：团队成员在项目或画布节点上留言。
 // node_id 为空是项目级留言，非空是画布节点批注。
 type ProjectComment struct {
 	Id         int    `json:"id"`

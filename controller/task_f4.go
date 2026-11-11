@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 片段重拍 / 续写 / 超分（API.md 10.3，F4）=====
+// ===== 片段重拍 / 续写 / 超分（API.md 10.3）=====
 
 // loadFinishedVideoTask 取当前用户已成功的视频任务。
 func loadFinishedVideoTask(c *gin.Context) (*model.GenerationTask, bool) {

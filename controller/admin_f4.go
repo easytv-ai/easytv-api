@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ===== 迭代四管理端：主体库只读、团队额度（API.md 10.9）=====
+// ===== 管理端：主体库只读、团队额度（API.md 10.9）=====
 
 // AdminGetSubjects GET /admin/subject?user_id=&team_id=&kind=&shared=&keyword=&page
 func AdminGetSubjects(c *gin.Context) {

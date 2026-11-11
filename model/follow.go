@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserFollow 关注关系（M11）：user_id 关注 author_id。
+// UserFollow 关注关系：user_id 关注 author_id。
 type UserFollow struct {
 	Id        int   `json:"id"`
 	UserId    int   `json:"user_id" gorm:"uniqueIndex:idx_follow,priority:1"`

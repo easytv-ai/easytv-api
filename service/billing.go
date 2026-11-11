@@ -42,7 +42,7 @@ type Quote struct {
 	AddOnPrice  float64 `json:"add_on_price"`
 	OffLabel    string  `json:"off_label"`
 	IsMember    bool    `json:"is_member"`
-	// MemberDay 会员日折扣说明（M7 剩余项）；未命中会员日为空
+	// MemberDay 会员日折扣说明；未命中会员日为空
 	DiscountLabel string `json:"discount_label"`
 
 	plan *model.MembershipPlan
@@ -277,7 +277,7 @@ func FulfillOrder(orderId int, paymentMethod string) error {
 		return nil
 	})
 	if err == nil {
-		// 事务提交后再写事件与奖励：邀请首充返利（T12）、口令首充加赠（T15）
+		// 事务提交后再写事件与奖励：邀请首充返利、口令首充加赠
 		Track(o.UserId, model.TrackEventPaySuccess, map[string]any{
 			"order_no": o.OrderNo, "amount": o.Price, "kind": o.Kind, "plan_id": o.PlanId, "payment_method": paymentMethod,
 		})
@@ -356,7 +356,7 @@ func EstimateTaskPoints(taskType, modelName, paramsJSON string, isMember bool) (
 	if price.Type != taskType {
 		return 0, nil, fmt.Errorf("模型 %s 不是 %s 类型", modelName, taskType)
 	}
-	// 会员价 → 促销价（T18）：有效期内取 min(标准价/会员价, 促销价)
+	// 会员价 → 促销价：有效期内取 min(标准价/会员价, 促销价)
 	unitPrice := price.EffectiveUnitPoints(isMember, common.GetTimestamp())
 	var params map[string]any
 	_ = json.Unmarshal([]byte(paramsJSON), &params)
@@ -482,7 +482,7 @@ func paramInt(params map[string]any, key string, def int) int {
 	return def
 }
 
-// FreezeTaskPoints 创建任务时预扣（一期：直接从批次扣减，失败退回）。
+// FreezeTaskPoints 创建任务时预扣（直接从批次扣减，失败退回）。
 // 买单账户按任务存下的 team_id 定（API.md 20）：个人空间扣自己，团队空间扣 owner 的积分池。
 func FreezeTaskPoints(task *model.GenerationTask, points int) error {
 	payer, err := PayerForTeam(task.UserId, task.TeamId)
@@ -495,7 +495,7 @@ func FreezeTaskPoints(task *model.GenerationTask, points int) error {
 	}
 	return model.DB.Transaction(func(tx *gorm.DB) error {
 		if payer != task.UserId {
-			// 团队成员花团队积分池时校验月度上限（F7）。锁住成员行串行化同一成员的预扣，
+			// 团队成员花团队积分池时校验月度上限（API.md 10.5）。锁住成员行串行化同一成员的预扣，
 			// 已用 = 已结算 + 进行中任务的预扣，否则前一个任务没跑完时后一个也能通过。
 			q, err := model.LockMemberQuota(tx, task.UserId)
 			if err != nil {
@@ -552,7 +552,7 @@ func completeTask(taskId int, succeed func(tx *gorm.DB, t *model.GenerationTask)
 		if err := succeed(tx, t); err != nil {
 			return err
 		}
-		// 团队成员月度已用额度（F7）：和任务离开进行中同时生效，额度校验才不会有空窗
+		// 团队成员月度已用额度（API.md 10.5）：和任务离开进行中同时生效，额度校验才不会有空窗
 		if t.PayerId > 0 && t.PayerId != t.UserId && t.PointsFrozen > 0 {
 			return model.AddMemberPointsUsedTx(tx, t.UserId, t.PointsFrozen)
 		}
@@ -715,7 +715,7 @@ func refundChatQuotaTx(tx *gorm.DB, t *model.GenerationTask) error {
 		return nil
 	}
 	// 消费日优先读创建时落的标记（params.agent.quota_day）：标记为空 = 创建时是会员 / 不限次、没消费过，不退；
-	// 老任务没有标记才按创建时间算消费日（老口径）。
+	// 老任务没有标记才按创建时间算消费日。
 	day, tagged := ChatQuotaDayOf(t)
 	if tagged && day == "" {
 		return nil
@@ -944,7 +944,7 @@ func GrantMonthlyPoints() {
 	}
 }
 
-// WalletView 钱包总览。个人空间只展示自己的钱包（不再附团队积分池）；
+// WalletView 钱包总览。个人空间只展示自己的钱包（不附团队积分池）；
 // 团队空间展示团队积分池（owner 的余额）与 owner 的团队版会员，并附 team 块（API.md 20）。
 func WalletView(userId, teamId int) map[string]any {
 	view := map[string]any{

@@ -145,7 +145,7 @@ func TestTimelineNormalizeAndHelpers(t *testing.T) {
 	}}
 	tl.Normalize()
 	c := tl.Clips[0]
-	// 同一节点第二条片段现在保留（复审 D04），只有空 node_id 被丢掉
+	// 同一节点的第二条片段要保留（API.md 24.3），只有空 node_id 被丢掉
 	if tl.Aspect != "16:9" || tl.Resolution != "720p" || tl.BgmVolume != 2 || len(tl.Clips) != 2 ||
 		c.In != 0 || c.Out != 1 || c.VoiceMode != "mix" || c.OrigVolume != 0.35 || c.VoiceVolume != 2 || len([]rune(*c.Subtitle)) != 200 {
 		t.Fatalf("normalized = %+v clip=%+v", tl, c)

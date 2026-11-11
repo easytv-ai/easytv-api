@@ -88,7 +88,7 @@ func TrackEvents(c *gin.Context) {
 	common.ApiSuccess(c, nil)
 }
 
-// GetMyGrowthTasks GET /user/growth/tasks 新手任务与进度（T7）
+// GetMyGrowthTasks GET /user/growth/tasks 新手任务与进度
 func GetMyGrowthTasks(c *gin.Context) {
 	summary, err := service.GetUserTasksSummary(c.GetInt("id"))
 	if err != nil {
@@ -98,7 +98,7 @@ func GetMyGrowthTasks(c *gin.Context) {
 	common.ApiSuccess(c, summary)
 }
 
-// Checkin POST /user/checkin 每日签到（T10）
+// Checkin POST /user/checkin 每日签到
 func Checkin(c *gin.Context) {
 	res, err := service.Checkin(c.GetInt("id"))
 	if err != nil {

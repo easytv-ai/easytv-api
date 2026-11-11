@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-// 短剧复审（2026-09-15）回归：D04 同一素材多次使用 / D07 BGM 音量 0。
+// 回归：同一素材多次使用 / BGM 音量 0。
 
-// TestTimelineKeepsSplitTake D04：A / B / A 三条片段归一化后仍是三条，各自有独立 id 且入出点独立。
+// TestTimelineKeepsSplitTake A / B / A 三条片段归一化后仍是三条，各自有独立 id 且入出点独立。
 func TestTimelineKeepsSplitTake(t *testing.T) {
 	tl := Timeline{Clips: []TimelineClip{
 		{NodeId: "video-1", Enabled: true, In: 0, Out: 1},
@@ -45,7 +45,7 @@ func TestTimelineKeepsSplitTake(t *testing.T) {
 	}
 }
 
-// TestTimelineDedupById D04：去重按片段 id 而不是 node_id；重复 id 的后一条分配新 id 而不是丢掉。
+// TestTimelineDedupById 去重按片段 id 而不是 node_id；重复 id 的后一条分配新 id 而不是丢掉。
 func TestTimelineDedupById(t *testing.T) {
 	tl := Timeline{Clips: []TimelineClip{
 		{Id: "c_aaaaaaaa", NodeId: "video-1", Enabled: true},
@@ -58,7 +58,7 @@ func TestTimelineDedupById(t *testing.T) {
 	}
 }
 
-// TestTimelineBgmVolumeZero D07：字段缺失回落 0.2；明确传 0 保持 0（静音）；正常值照旧钳到 [0,2]。
+// TestTimelineBgmVolumeZero 字段缺失回落 0.2；明确传 0 保持 0（静音）；正常值照旧钳到 [0,2]。
 func TestTimelineBgmVolumeZero(t *testing.T) {
 	cases := []struct {
 		body string

@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// CanvasWorkflow 工作流模板（API.md 31，L3）：把画布上打好组的一串节点连同连线存下来，
+// CanvasWorkflow 工作流模板（API.md 31）：把画布上打好组的一串节点连同连线存下来，
 // 之后能整套发回任意画布。graph 就是前端的节点 / 连线快照，后端只做大小与归属校验，不解释内容。
 type CanvasWorkflow struct {
 	Id        int            `json:"id"`

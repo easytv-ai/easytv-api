@@ -1,4 +1,4 @@
-// seed 把 easytv-web 界面里原本写死的展示数据灌进数据库，让前端改读接口后立刻有内容。
+// seed 把 easytv-web 界面用的展示数据灌进数据库，让前端读接口时立刻有内容。
 //
 //	go run ./cmd/seed            # 使用 .env
 //	go run ./cmd/seed --env-file .env.cn
@@ -504,7 +504,7 @@ func seedContent() {
 	}
 }
 
-// seedCategories 前台筛选标签：成片分类与 Skill 分类（与 easytv-web 原写死的 BASE_TAGS 一致）。
+// seedCategories 前台筛选标签：成片分类与 Skill 分类。
 func seedCategories() {
 	groups := map[string][]string{
 		model.CategoryScopeWork:  {"电影美学", "商业广告", "短剧", "动画游戏", "音乐 MV"},

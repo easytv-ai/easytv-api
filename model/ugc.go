@@ -6,7 +6,7 @@ import (
 	"easytv-api/common"
 )
 
-// UgcSubmission 站外发布返积分投稿（T31）。
+// UgcSubmission 站外发布返积分投稿。
 type UgcSubmission struct {
 	Id           int    `json:"id"`
 	UserId       int    `json:"user_id" gorm:"index"`
