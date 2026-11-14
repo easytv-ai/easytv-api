@@ -32,7 +32,7 @@ func mockDB(t *testing.T) sqlmock.Sqlmock {
 	if err != nil {
 		t.Fatal(err)
 	}
-	model.DB = db
+	model.SwapDBForTest(db)
 	return mock
 }
 

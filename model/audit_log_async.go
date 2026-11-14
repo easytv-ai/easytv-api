@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"easytv-api/common"
+
+	"gorm.io/gorm"
 )
 
 // 审计日志异步写入：有界缓冲队列 + 单个后台写协程。
@@ -166,4 +168,11 @@ func ReplaceAuditLogWriter(write func([]*AuditLog) error) (restore func()) {
 		FlushAuditLogs(time.Second)
 		auditLogBuffer.Store(old)
 	}
+}
+
+// SwapDBForTest 测试换库：先等审计写协程把上一个用例入队的事件写完再换，
+// 免得它一边读全局 DB 一边被改写，或把上一个用例的写入打到新用例的 mock 上。仅供测试调用。
+func SwapDBForTest(db *gorm.DB) {
+	FlushAuditLogs(time.Second)
+	DB = db
 }

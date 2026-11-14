@@ -230,8 +230,8 @@ func TestPublicStyleListSQL(t *testing.T) {
 		t.Fatalf("gorm open failed: %v", err)
 	}
 	old := model.DB
-	model.DB = db
-	t.Cleanup(func() { model.DB = old })
+	model.SwapDBForTest(db)
+	t.Cleanup(func() { model.SwapDBForTest(old) })
 
 	visible := "\\(\\(user_id = 0 AND status = \\?\\) OR status = \\?\\)"
 	mock.ExpectQuery("SELECT count\\(\\*\\) FROM `style` WHERE "+visible+" AND `style`.`deleted_at` IS NULL").

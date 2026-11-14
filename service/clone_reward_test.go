@@ -26,3 +26,26 @@ func TestCloneRewardPoints(t *testing.T) {
 		t.Fatalf("无上限: %d", got)
 	}
 }
+
+func TestCloneSeenWork(t *testing.T) {
+	// 真实事件属性：键按字母序，work_id 在最后，后面跟的是右花括号
+	real := `{"canvas_id":35,"work_id":7}`
+	if !cloneSeenWork([]string{`{"work_id":3}`, real}, 7) {
+		t.Fatal("同一作品当天做过，应命中")
+	}
+	if cloneSeenWork([]string{real}, 70) {
+		t.Fatal("作品 70 不该被作品 7 命中")
+	}
+	if cloneSeenWork([]string{`{"work_id":17}`, `{"canvas_id":7}`, `坏数据`, ``}, 7) {
+		t.Fatal("别的作品、别的字段、坏数据都不算")
+	}
+	if !cloneSeenWork([]string{`{"work_id":"7"}`}, 7) {
+		t.Fatal("字符串形式的编号也要认")
+	}
+	if cloneSeenWork(nil, 7) {
+		t.Fatal("当天没有事件")
+	}
+	if !cloneSeenWork(make([]string, cloneDedupScan), 7) {
+		t.Fatal("事件条数到顶按已做过算")
+	}
+}

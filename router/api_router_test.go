@@ -34,7 +34,7 @@ func newAuthedEngine(t *testing.T) (*gin.Engine, sqlmock.Sqlmock) {
 	if err != nil {
 		t.Fatalf("gorm open failed: %v", err)
 	}
-	model.DB = db
+	model.SwapDBForTest(db)
 	mock.ExpectQuery("SELECT .* FROM `user` WHERE access_token").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "username", "role", "status", "group", "access_token"}).
 			AddRow(8, "u8", 1, 1, "default", "tok"))

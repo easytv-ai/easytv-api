@@ -48,7 +48,7 @@ func TestCollectVideoClipsBroken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	model.DB = db
+	model.SwapDBForTest(db)
 	mock.ExpectQuery("SELECT .* FROM `asset`").WillReturnRows(
 		sqlmock.NewRows([]string{"id", "user_id", "type", "url"}).AddRow(1, 8, model.AssetTypeVideo, "/upload/2026/09/13/a.mp4"))
 	mock.ExpectQuery("SELECT .* FROM `asset`").WillReturnRows(sqlmock.NewRows([]string{"id"}))

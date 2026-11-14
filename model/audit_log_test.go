@@ -199,7 +199,7 @@ func mockAuditDB(t *testing.T) sqlmock.Sqlmock {
 		t.Fatal(err)
 	}
 	old := DB
-	DB = db
+	SwapDBForTest(db)
 	t.Cleanup(func() { DB = old })
 	return mock
 }

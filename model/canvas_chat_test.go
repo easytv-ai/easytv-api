@@ -91,7 +91,7 @@ func TestListCanvasChatsScopesOwner(t *testing.T) {
 		t.Fatal(err)
 	}
 	old := DB
-	DB = db
+	SwapDBForTest(db)
 	t.Cleanup(func() { DB = old })
 
 	mock.ExpectQuery("SELECT `id`,`user_id`,`canvas_id`,`title`,`message_count`,`created_at`,`updated_at` FROM `canvas_chat` WHERE user_id = \\? AND canvas_id = \\? ORDER BY updated_at desc, id desc LIMIT 30").

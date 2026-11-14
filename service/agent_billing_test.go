@@ -24,7 +24,7 @@ func agentTestDB(t *testing.T) sqlmock.Sqlmock {
 	if err != nil {
 		t.Fatalf("gorm open failed: %v", err)
 	}
-	model.DB = db
+	model.SwapDBForTest(db)
 	return mock
 }
 

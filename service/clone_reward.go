@@ -1,8 +1,8 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
 	"easytv-api/common"
@@ -23,12 +23,11 @@ func RewardWorkClone(authorId, clonerId, workId int, title string) {
 	dayStart := time.Now().In(model.CheckinLocation)
 	dayStart = time.Date(dayStart.Year(), dayStart.Month(), dayStart.Day(), 0, 0, 0, 0, model.CheckinLocation)
 	since := dayStart.Unix()
-	var seen int64
+	var props []string
 	model.DB.Model(&model.TrackEvent{}).
-		Where("name = ? AND user_id = ? AND created_at >= ? AND props LIKE ?",
-			model.TrackEventWorkClone, clonerId, since, `%"work_id":`+strconv.Itoa(workId)+`,%`).
-		Count(&seen)
-	if seen > 0 {
+		Where("name = ? AND user_id = ? AND created_at >= ?", model.TrackEventWorkClone, clonerId, since).
+		Limit(cloneDedupScan).Pluck("props", &props)
+	if cloneSeenWork(props, workId) {
 		return
 	}
 	var today struct{ Sum int }
@@ -51,6 +50,29 @@ func RewardWorkClone(authorId, clonerId, workId int, title string) {
 		"作品被做同款",
 		fmt.Sprintf("「%s」被做同款，你获得 %d 积分", label, points),
 		fmt.Sprintf("/watch/%d", workId))
+}
+
+// cloneDedupScan 去重时最多看访客当天多少条做同款事件；超过这个量的访客不再给作者发奖。
+const cloneDedupScan = 500
+
+// cloneSeenWork 访客当天的做同款事件里有没有这件作品。
+// 事件属性是 JSON 文本，键顺序不固定，解出来比对，不拿字符串去匹配；条数到顶按已做过算。
+func cloneSeenWork(props []string, workId int) bool {
+	if len(props) >= cloneDedupScan {
+		return true
+	}
+	for _, raw := range props {
+		var p struct {
+			WorkId json.Number `json:"work_id"`
+		}
+		if json.Unmarshal([]byte(raw), &p) != nil {
+			continue
+		}
+		if id, err := p.WorkId.Int64(); err == nil && int(id) == workId {
+			return true
+		}
+	}
+	return false
 }
 
 // cloneRewardPoints 本次实发积分：未达日上限发 per，超出则只补差额，已满或关闭为 0。

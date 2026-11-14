@@ -32,7 +32,10 @@ func initMockDB(t *testing.T) sqlmock.Sqlmock {
 	if err != nil {
 		t.Fatalf("gorm open failed: %v", err)
 	}
-	model.DB = db
+	model.SwapDBForTest(db)
+	// 审计日志由后台协程异步落库：让它在用例期间不碰 mock，
+	// 否则会和用例登记期望的动作抢同一个 mock，偶发吃掉期望或被竞态检测拦下。
+	t.Cleanup(model.ReplaceAuditLogWriter(func([]*model.AuditLog) error { return nil }))
 	return mock
 }
 

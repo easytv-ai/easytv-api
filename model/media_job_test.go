@@ -21,7 +21,7 @@ func mockMediaDB(t *testing.T) sqlmock.Sqlmock {
 	if err != nil {
 		t.Fatalf("gorm open failed: %v", err)
 	}
-	DB = db
+	SwapDBForTest(db)
 	return mock
 }
 
