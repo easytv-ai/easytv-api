@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Release pipeline: GoReleaser binaries (Linux / macOS / Windows, amd64 / arm64) on `v*` tags and multi-arch images on GHCR (`ghcr.io/easytv-ai/easytv-api`).
-- `govulncheck` in CI; `docker compose --profile full` starts studio and admin console alongside the API.
+- `govulncheck` in CI; `docker compose --profile full` starts studio, admin console and partner console alongside the API.
 - `SUPPORT.md`, release-notes categories (`.github/release.yml`), label sync, stale bot, Conventional Commits PR-title check and OpenSSF Scorecard workflow.
 - Open-source governance: AGPL-3.0 license, contributing guide, code of
   conduct, security policy, issue and pull request templates, Dependabot and

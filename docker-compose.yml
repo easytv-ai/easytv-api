@@ -2,11 +2,15 @@
 #
 #   cp .env.example .env                   # set ROOT_PASSWORD, CRYPTO_SECRET
 #   docker compose up -d                   # API + MySQL + Redis on :8383
-#   docker compose --profile full up -d    # + studio (:3005) and admin console (:3006)
+#   docker compose --profile full up -d    # + studio (:3005), admin console (:3006)
+#                                          #   and partner console (:3010)
 #
 # The `full` profile pulls the pre-built studio / console images from GHCR.
-# Set PUBLIC_API_URL / PUBLIC_STUDIO_URL to the addresses your browser will use
-# (defaults assume everything runs on localhost).
+# The front ends call the API from the browser, so PUBLIC_API_URL,
+# PUBLIC_STUDIO_URL and PUBLIC_PARTNER_URL must be addresses your browser can
+# reach, never compose service names such as http://api:8383. Defaults assume
+# everything runs on localhost; set them in .env when it does not, and keep
+# them in step with API_PORT / WEB_PORT / PARTNER_PORT if you remap ports.
 #
 # SQL_DSN / REDIS_CONN_STRING below override whatever is in .env so the API talks
 # to the bundled services. Change MYSQL_PASSWORD in one place: the `x-db` block.
@@ -69,6 +73,7 @@ services:
       NUXT_PUBLIC_SITE_NAME: ${SITE_NAME:-EasyTV}
       NUXT_PUBLIC_API_BASE_URL: ${PUBLIC_API_URL:-http://localhost:8383}
       NUXT_PUBLIC_SITE_URL: ${PUBLIC_STUDIO_URL:-http://localhost:3005}
+      NUXT_PUBLIC_MANAGE_URL: ${PUBLIC_MANAGE_URL:-http://localhost:3006}
       NUXT_PUBLIC_MEDIA_HOSTS: ${PUBLIC_MEDIA_HOSTS:-}
       NUXT_PUBLIC_CONTACT_EMAIL: ${CONTACT_EMAIL:-}
     ports:
@@ -84,8 +89,22 @@ services:
       NUXT_PUBLIC_SITE_NAME: ${SITE_NAME:-EasyTV}
       NUXT_PUBLIC_API_BASE_URL: ${PUBLIC_API_URL:-http://localhost:8383}
       NUXT_PUBLIC_STUDIO_URL: ${PUBLIC_STUDIO_URL:-http://localhost:3005}
+      NUXT_PUBLIC_PARTNER_URL: ${PUBLIC_PARTNER_URL:-http://localhost:3010}
     ports:
       - "${MANAGE_PORT:-3006}:3006"
+    depends_on:
+      - api
+
+  partner:
+    image: ghcr.io/easytv-ai/easytv-partner:latest
+    profiles: [full]
+    restart: unless-stopped
+    environment:
+      NUXT_PUBLIC_SITE_NAME: ${SITE_NAME:-EasyTV}
+      NUXT_PUBLIC_API_BASE_URL: ${PUBLIC_API_URL:-http://localhost:8383}
+      NUXT_PUBLIC_STUDIO_URL: ${PUBLIC_STUDIO_URL:-http://localhost:3005}
+    ports:
+      - "${PARTNER_PORT:-3010}:3010"
     depends_on:
       - api
 

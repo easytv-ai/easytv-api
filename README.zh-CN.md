@@ -61,13 +61,13 @@ curl http://localhost:8383/healthz
 
 Compose 会拉取 `ghcr.io/easytv-ai/easytv-api:latest`，启动 MySQL 8.4、Redis 7 和监听 8383 的 API，上传文件与日志放在命名卷里。首次启动自动迁移数据库，并用 `ROOT_PASSWORD` 创建 `admin` 账号。
 
-加上 `full` profile 可以把创作台与运营后台（同样是预构建镜像）一起拉起来：
+加上 `full` profile 可以把创作台、运营后台与代理商后台（同样是预构建镜像）一起拉起来：
 
 ```bash
-docker compose --profile full up -d     # 创作台 :3005，运营后台 :3006
+docker compose --profile full up -d     # 创作台 :3005，运营后台 :3006，代理商后台 :3010
 ```
 
-浏览器不是通过 localhost 访问容器时，在 `.env` 里设置 `PUBLIC_API_URL` / `PUBLIC_STUDIO_URL`。想本地构建 API 镜像而不拉取，把 `docker-compose.yml` 里的 `build: .` 取消注释即可。
+浏览器不是通过 localhost 访问容器时，在 `.env` 里设置 `PUBLIC_API_URL` / `PUBLIC_STUDIO_URL` / `PUBLIC_PARTNER_URL`（填浏览器能访问到的地址，不是 Compose 内部服务名）。想本地构建 API 镜像而不拉取，把 `docker-compose.yml` 里的 `build: .` 取消注释即可。
 
 镜像提供 `linux/amd64` 与 `linux/arm64`，标签跟随版本（`1.2.3`、`1.2`、`1`），另有 `latest` 与 `main`。
 
@@ -81,11 +81,26 @@ cp .env.example .env            # 设置 SQL_DSN、ROOT_PASSWORD、CRYPTO_SECRET
 go run . --port 8383
 ```
 
-### 接下来
+### 从零到第一条视频
 
-1. 把创作台指向后端：在 `easytv-web` 设置 `NUXT_PUBLIC_API_BASE_URL=http://localhost:8383`。
-2. 用 `admin` 登录 `easytv-manage`，打开 **系统 → 网关**，填入网关地址与 Key，拉取模型清单并导入定价。
-3. 可选：`go run ./cmd/seed --env-file .env` 灌入演示内容。
+用 `full` profile 起好之后：
+
+1. **进后台配模型**：打开运营后台 `http://localhost:3006`，用 `admin` 和 `.env` 里的 `ROOT_PASSWORD` 登录。首页顶部的「开始使用」会带你走三步：填模型网关的地址与 Key → 拉取模型 → 勾选并导入定价。网关用任何兼容 New API 协议的实例都可以。
+2. **登录创作台**：打开 `http://localhost:3005`。中文界面用手机号 + 验证码登录；没有配置短信通道时验证码不会真发，而是打印在后端日志里：
+
+   ```bash
+   docker compose logs --tail=20 api | grep 联调模式
+   ```
+
+   英文界面（右上角切换语言）用邮箱注册 / 登录，邮箱验证码同样在日志里。
+3. **出第一条视频**：新建画布，加一个视频节点，写提示词，选模型，点生成。
+
+本地磁盘存储（缺省）下要知道的两件事：
+
+- 参考**图片**会随请求内联传给网关，不需要公网地址，单张上限 10 MB。
+- 参考**视频 / 音频**不内联。要用它们，启用对象存储（OSS / 七牛），或把 `UPLOAD_BASE_URL` 配成网关能访问到的本站地址（形如 `https://你的域名/upload`）。
+
+可选：`go run ./cmd/seed --env-file .env` 灌入演示内容。
 
 ## 配置
 

@@ -42,6 +42,9 @@ var EnvFile = ".env"
 // LogDir 日志目录，可通过 --log-dir 覆盖（默认 ./logs）。
 var LogDir = "./logs"
 
+// exampleCryptoSecret .env.example 里的占位值：长度够，但是公开的。
+const exampleCryptoSecret = "please-change-me-to-a-long-random-string"
+
 // InitEnv 解析环境变量到全局配置。
 func InitEnv() {
 	Port = GetEnvOrDefault("PORT", 8383)
@@ -51,6 +54,9 @@ func InitEnv() {
 		log.Fatal("CRYPTO_SECRET 未配置或长度不足 16 位：生产环境必须显式设置随机密钥（生成示例：openssl rand -hex 32）")
 	} else if DebugEnabled && len(CryptoSecret) < 16 {
 		SysLog("warning: CRYPTO_SECRET 未配置，开发模式降级使用弱默认值；生产环境必须显式设置")
+	}
+	if CryptoSecret == exampleCryptoSecret {
+		SysLog("warning: CRYPTO_SECRET 还是 .env.example 里的示例值，任何人都知道它；请换成随机密钥（openssl rand -hex 32）")
 	}
 	VerificationValidMinutes = GetEnvOrDefault("VERIFICATION_VALID_MINUTES", 10)
 	Version = GetEnvOrDefaultString("VERSION", Version)

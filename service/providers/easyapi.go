@@ -359,7 +359,8 @@ func taskInputAsset(task *model.GenerationTask, assetId int) (*model.Asset, erro
 }
 
 // ExtractInputReferences 从任务 inputs（[{asset_id, role}]）构建参考素材列表：
-// 校验素材归属当前用户、URL 可公网访问、资产类型与角色匹配，并按角色推导 input_references.type。
+// 校验素材归属当前用户、资产类型与角色匹配，并按角色推导 input_references.type。
+// 网关拉不到的图片（本地磁盘存储）内联成 data URL，见 gatewayAssetUrl。
 func ExtractInputReferences(task *model.GenerationTask) ([]InputReference, error) {
 	var inputs []struct {
 		AssetId int    `json:"asset_id"`
@@ -380,13 +381,14 @@ func ExtractInputReferences(task *model.GenerationTask) ([]InputReference, error
 		if err != nil {
 			return nil, err
 		}
-		if !strings.HasPrefix(asset.Url, "http") {
-			return nil, errors.New("视频生成的素材必须是可公网访问的地址（请配置 UPLOAD_BASE_URL）")
-		}
 		if asset.Type != refType {
 			return nil, fmt.Errorf("素材 %d 类型不符：角色 %s 需要 %s 素材", in.AssetId, in.Role, refType)
 		}
-		refs = append(refs, InputReference{Type: refType, Url: asset.Url, Role: refRole})
+		refUrl, err := gatewayAssetUrl(asset)
+		if err != nil {
+			return nil, err
+		}
+		refs = append(refs, InputReference{Type: refType, Url: refUrl, Role: refRole})
 	}
 	return refs, nil
 }
@@ -443,7 +445,7 @@ func (p *EasyAPIProvider) ChatWithOptions(modelName, prompt string, opts service
 const chatImageMax = 4
 
 // ChatWithImages 带图片的 /v1/chat/completions：content 用 text + image_url 数组（OpenAI 视觉格式）。
-// 图片地址是公网 http(s) 时直接给 URL，否则读字节转 data URL。
+// 图片地址网关拉得到时直接给 URL，否则读字节转 data URL（见 gatewayAssetUrl）。
 func (p *EasyAPIProvider) ChatWithImages(modelName, prompt string, images []*model.Asset) (string, error) {
 	if len(images) == 0 {
 		return p.Chat(modelName, prompt)
@@ -477,14 +479,7 @@ func (p *EasyAPIProvider) ChatWithImages(modelName, prompt string, images []*mod
 }
 
 func chatImageUrl(a *model.Asset) (string, error) {
-	if strings.HasPrefix(a.Url, "https://") || strings.HasPrefix(a.Url, "http://") {
-		return a.Url, nil
-	}
-	img, err := readAssetImage(a)
-	if err != nil {
-		return "", err
-	}
-	return "data:" + http.DetectContentType(img.Data) + ";base64," + base64.StdEncoding.EncodeToString(img.Data), nil
+	return gatewayAssetUrl(a)
 }
 
 func (p *EasyAPIProvider) runText(task *model.GenerationTask) {
@@ -702,8 +697,7 @@ func readAssetImage(a *model.Asset) (ImageFile, error) {
 		name = fmt.Sprintf("asset-%d.png", a.Id)
 	}
 	var r io.ReadCloser
-	if strings.HasPrefix(a.Url, "/upload/") {
-		key := strings.TrimPrefix(a.Url, "/upload/")
+	if key, ok := localUploadKey(a.Url); ok {
 		if strings.Contains(key, "..") {
 			return ImageFile{}, errors.New("无效的素材地址")
 		}
@@ -799,11 +793,12 @@ func (p *EasyAPIProvider) runImage(task *model.GenerationTask) {
 	default:
 		urls := make([]string, 0, len(refs))
 		for _, a := range refs {
-			if !strings.HasPrefix(a.Url, "http") {
-				err = errors.New("参考图必须是可公网访问的地址（请配置 UPLOAD_BASE_URL）")
+			refUrl, urlErr := gatewayAssetUrl(a)
+			if urlErr != nil {
+				err = urlErr
 				break
 			}
-			urls = append(urls, a.Url)
+			urls = append(urls, refUrl)
 		}
 		if err == nil && mask != nil {
 			err = fmt.Errorf("模型 %s 不支持蒙版局部修改，请换 gpt-image 系模型", task.Model)

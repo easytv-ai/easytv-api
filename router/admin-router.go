@@ -140,6 +140,7 @@ func SetAdminRouter(router *gin.Engine) {
 		adminRouter.GET("/model-price/health", controller.AdminModelPriceHealth) // 模型健康（API.md 37），须在 /:id 之前
 		adminRouter.GET("/gateway/balance", controller.AdminGatewayBalance)      // 网关余额（API.md 38）
 		adminRouter.GET("/model-price/:id", controller.AdminGetModelPrice)
+		adminRouter.GET("/setup/status", controller.AdminSetupStatus) // 部署就绪状态（API.md 40），只读
 		adminRouter.GET("/order", controller.AdminGetOrders)
 		adminRouter.POST("/order/:id/close", controller.AdminCloseOrder)
 		adminRouter.GET("/wallet", controller.AdminGetWallets)

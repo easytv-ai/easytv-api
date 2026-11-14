@@ -2715,3 +2715,38 @@ seedance 曾因网关账户欠费（402「预估扣费 $0.61，当前余额 $-0.
 - 节点上能看历史结果并切回。
 - 模型下拉展示留用率；`recent_keep_total = 0` 不展示。
 - 图生视频 / 首尾帧模式缺首帧时提交前拦下；时长 / 分辨率被改档时提示。
+
+## 40. 部署就绪状态与首登向导（2026-11-14）
+
+自部署后创作台要有模型可用，得先在管理端填网关、拉模型、导入定价。这一节给管理端一个只读汇总，用来判断「配好了没有」并驱动仪表板顶部的开始使用向导。
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/admin/setup/status` | 管理端（AdminAuth，普通管理员可读）。只读；只回布尔与计数，**不回网关地址、令牌或任何密钥** |
+
+响应 `data`：
+
+```json
+{
+  "ready": false,
+  "gateway": { "configured": true, "enabled": true },
+  "models": { "priced_count": 0, "total_count": 0, "by_type": { "text": 0, "image": 0, "video": 0, "audio": 0 } },
+  "storage": { "kind": "local", "has_public_base_url": false },
+  "media": { "ffmpeg": true, "ffprobe": true }
+}
+```
+
+- `gateway.configured`：网关地址与令牌都有值（setting 优先，回退 env）。`gateway.enabled`：`EasyAPIGatewayEnabled` 未显式关闭且有令牌。
+- `models.priced_count`：`model_price` 里 `status=1` 的行数，与 `GET /generation/models` 下发的清单同口径；`total_count` 含停用行；`by_type` 四个键恒在，只数生效行。
+- `ready = gateway.configured && gateway.enabled && models.priced_count > 0`。
+- `storage.kind`：`local`（本地磁盘）/ `oss` / `qiniu`，取当前生效的存储实现。`has_public_base_url`：对象存储恒为 true；本地磁盘时表示是否配了 `UploadBaseUrl`。本地磁盘且为 false 时素材是 `/upload/` 相对地址，图片会转 data URL 发给网关不受影响，参考视频 / 音频需要网关能访问的公网地址。
+- `media.ffmpeg / ffprobe`：服务器上能否找到可执行文件（setting `FFmpegPath` / `FFprobePath` > env > PATH）。
+
+前端约定（管理端仪表板）：
+
+- `ready=false` 时在仪表板顶部显示「开始使用」向导卡片，可收起（收起状态只存浏览器本地），`ready=true` 后不再显示。
+- 三步都用现有接口，不新增写接口：① `PUT /admin/gateway/config`（`base_url` / `api_key` / `enabled`）保存后调 `GET /admin/gateway/fetch-models`，拉取成功即视为连通；② 展示 `fetch-models` 的总数与分类型数量；③ 勾选后 `POST /admin/gateway/models/import`，积分用 `fetch-models` 给的 `suggest_points`，没有建议积分的模型不可勾选（到定价页手动定价）。
+- 三步的写操作都是 RootAuth；普通管理员只看状态与「请联系超级管理员」。
+- 同一张卡片显示环境自检一行：存储类型（本地磁盘且 `has_public_base_url=false` 时给出上面的提示）、ffmpeg 是否可用。只读，不做配置。
+
+创作台约定：`GET /generation/models` 某类型清单为空时，画布检查器对普通用户显示「暂无可用模型，请联系运营开通」；对管理员（`role >= 10`，后台代登会话除外）显示「还没有开通模型」与指向管理端的「去后台配置」链接，地址取创作台运行时配置 `NUXT_PUBLIC_MANAGE_URL`，未配置时只显示文案。

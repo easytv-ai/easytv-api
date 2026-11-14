@@ -82,15 +82,16 @@ Redis 7 and the API on port 8383. Uploads and logs persist in named volumes.
 The first start runs the database migration and creates the `admin` user with
 `ROOT_PASSWORD`.
 
-Add the studio and the admin console (also pre-built images) with the `full`
-profile:
+Add the studio, the admin console and the partner console (also pre-built
+images) with the `full` profile:
 
 ```bash
-docker compose --profile full up -d     # studio on :3005, admin console on :3006
+docker compose --profile full up -d     # studio :3005, admin console :3006, partner console :3010
 ```
 
-Set `PUBLIC_API_URL` / `PUBLIC_STUDIO_URL` in `.env` when the browser reaches
-the containers through another hostname. To build the API image locally
+Set `PUBLIC_API_URL` / `PUBLIC_STUDIO_URL` / `PUBLIC_PARTNER_URL` in `.env`
+when the browser reaches the containers through another hostname (use
+addresses the browser can reach, not compose service names). To build the API image locally
 instead of pulling it, uncomment `build: .` in `docker-compose.yml`.
 
 Images are published for `linux/amd64` and `linux/arm64`; tags follow releases
@@ -107,13 +108,37 @@ cp .env.example .env            # set SQL_DSN, ROOT_PASSWORD, CRYPTO_SECRET
 go run . --port 8383
 ```
 
-### Next steps
+### From zero to your first video
 
-1. Point the studio at the API: `NUXT_PUBLIC_API_BASE_URL=http://localhost:8383`
-   in `easytv-web`.
-2. Sign in to `easytv-manage` as `admin`, open **System → Gateway**, enter your
-   gateway URL and key, fetch the model list and import pricing.
-3. Optional: seed demo content with `go run ./cmd/seed --env-file .env`.
+With the `full` profile running:
+
+1. **Set up models in the console.** Open the admin console at
+   `http://localhost:3006` and sign in as `admin` with the `ROOT_PASSWORD` from
+   `.env`. The **Get started** card at the top of the dashboard walks you through
+   three steps: enter your model gateway URL and key, fetch the model list, then
+   pick models and import pricing. Any gateway that speaks the New API protocol
+   works.
+2. **Sign in to the studio.** Open `http://localhost:3005`. The Chinese UI signs
+   in with a phone number and SMS code; the English UI (language switch, top
+   right) uses email. Without an SMS / SMTP provider configured, codes are not
+   sent — they are printed to the API log:
+
+   ```bash
+   docker compose logs --tail=20 api | grep 联调模式
+   ```
+
+3. **Generate.** Create a canvas, add a video node, write a prompt, pick a model
+   and hit generate.
+
+Two things to know about the default local-disk storage:
+
+- Reference **images** are inlined into the gateway request, so no public URL is
+  needed (10 MB per image).
+- Reference **videos / audio** are not inlined. To use them, enable object
+  storage (OSS / Qiniu) or set `UPLOAD_BASE_URL` to an address of this server the
+  gateway can reach (e.g. `https://your-domain/upload`).
+
+Optional: seed demo content with `go run ./cmd/seed --env-file .env`.
 
 ## Configuration
 
