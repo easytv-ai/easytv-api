@@ -286,7 +286,7 @@
 | DELETE | `/user/canvas/:id/chat/:sid` | 删除一段对话 | |
 | DELETE | `/user/canvas/:id/chat` | 清空这张画布的对话历史 | `{ deleted }` |
 | GET | `/user/asset` | 资产列表 | `type?, project_id?, source?, keyword?, page, page_size` |
-| POST | `/user/asset/upload` | 上传（multipart） | 字段 `file`，可选 `project_id`；返回 asset |
+| POST | `/user/asset/upload` | 上传（multipart） | 字段 `file`，可选 `project_id`；返回 asset。请求体在解析表单前按 `UPLOAD_MAX_MB` + 1 MB 表单余量限制，超限（按 `Content-Length` 或实际读取量）返回 `文件超过大小限制（单个文件最大 N MB）`，不落盘 |
 | DELETE | `/user/asset/:id` | 进回收站（文件保留 30 天） | |
 | GET | `/user/asset/trash` | 资产回收站 | 分页 |
 | POST | `/user/asset/:id/restore` | 恢复资产 | |
@@ -379,6 +379,55 @@
 | DELETE | `/admin/skill/:id` | 删除 |
 
 管理端列表的项目/画布/资产附带 `owner_name`（作者昵称）与 `status`（1 正常 / 2 回收站），画布另附 `node_count`；`?status=1|2` 可按回收站过滤。
+
+### 2.4 提现管理（`/admin/withdraw`）
+
+用户侧 `POST /user/withdraw`（余额提现，`owner_type=1`）与 `POST /user/creator/withdraw`（技能收益提现，`owner_type=3`，见 8.3）建单时已冻结对应金额；管理端只负责审核与登记打款结果，**平台不代付**，打款在线下 / 第三方完成后回填。
+
+| 方法 | 路径 | 权限 | 说明 |
+|---|---|---|---|
+| GET | `/admin/withdraw` | AdminAuth | 提现单列表，`status?`（见下，缺省全部）、`page?`（默认 1）、`page_size?`（默认 10，上限 100）；按 `id` 倒序。响应 `{ items, total }` |
+| POST | `/admin/withdraw/:id/audit` | RootAuth | `{ action: "approve" \| "reject", remark? }`。`remark` ≤ 255 字。`approve`：待审核 → 打款中；`reject`：待审核 → 已驳回，并退回冻结额。记录 `audit_admin_id` / `audit_time` / `audit_remark` |
+| POST | `/admin/withdraw/:id/paid` | RootAuth | `{ transaction_no }` 打款中 → 已打款，写 `complete_time` 与第三方流水号。`transaction_no` 去首尾空白后必填、≤ 64 字符 |
+| POST | `/admin/withdraw/:id/failed` | RootAuth | `{ failure_msg }` 打款中 → 打款失败，写 `complete_time`，并退回冻结额。`failure_msg` 去首尾空白后必填、≤ 255 字 |
+
+列表项（`withdraw` 表原样返回）：`id`、`withdraw_no`、`owner_type`（1 平台用户 / 2 伙伴 / 3 技能分成）、`owner_id`（1、3 为 `user.id`，2 为 `partner.id`）、`amount` / `fee` / `actual_amount`（元）、`way`（`alipay` / `wechat` / `bank`）、`account_info`（收款账户 JSON 字符串，未脱敏）、`status`、`audit_admin_id`、`audit_time`、`audit_remark`、`created_at`、`complete_time`、`transaction_no`、`failure_msg`。时间均为 Unix 秒，未发生为 0。
+
+状态流转（`status`）：
+
+```
+0 待审核 ──approve──▶ 2 打款中 ──paid────▶ 1 已打款（终态）
+   │                      └────failed──▶ -1 打款失败（终态，已退回）
+   └──reject──▶ -9 已驳回（终态，已退回）
+```
+
+状态更新带前置状态条件（`WHERE id = ? AND status = ?`），重复提交或并发操作只有一次生效，其余按「状态不允许」报错，不会重复退回。终态不可再流转；打款失败后需用户重新申请。
+
+退回规则（驳回 / 打款失败）：
+- `owner_type=1`：按 `amount` 退回申请人 `quota`，写 `promoter_bill(biz_type 4 提现退回, source_no=withdraw_no)`。
+- `owner_type=2`：退回到 `partner.user_id` 的 `quota`，流水同上。
+- `owner_type=3`：退回技能收益积分（`promoter_bill biz_type 11`），不动 `quota`。
+
+状态更新与退回不在同一个事务里。退回没有成功时接口返回 `success: false`，`message` 说明「状态已更新但余额没有退回成功」并带提现单号，同时写一条带单号的错误日志供人工补退；此时不要重复操作（状态已是终态，重复提交只会报状态不允许）。
+
+成功响应统一 `{ success: true, message: "", data: null }`（列表除外）。错误均为 HTTP 200 + `{ success: false, message }`：
+
+| 场景 | message |
+|---|---|
+| 非超级管理员调用三个写接口 | `权限不足` |
+| `:id` 不是正整数 | `无效的提现单 ID` |
+| 请求体不是合法 JSON | `无效的参数` |
+| `action` 不是 `approve` / `reject` | `无效的操作` |
+| 审核时提现单不存在或不是待审核 | `只有待审核的提现单可以审核` |
+| `remark` 超长 | `审核备注不能超过 255 字` |
+| 标记已打款时不存在或不是打款中 | `只有打款中的提现单可以标记已打款` |
+| `transaction_no` 为空 / 超长 | `请填写打款流水号` / `打款流水号不能超过 64 个字符` |
+| 标记失败时不存在或不是打款中 | `只有打款中的提现单可以标记失败` |
+| `failure_msg` 为空 / 超长 | `请填写失败原因` / `失败原因不能超过 255 字` |
+| 列表 `status` 不是整数 | `无效的状态筛选` |
+| 列表查询出错 | `查询失败` |
+| 状态已更新但退回失败 | `提现单已驳回 / 已标记打款失败，但余额没有退回成功，请不要重复操作并联系技术人工补退（提现单 …）` |
+| 其它数据库错误 | `操作失败，请稍后重试`（原文只进日志） |
 
 ## 3. 前端页面 ↔ 接口
 

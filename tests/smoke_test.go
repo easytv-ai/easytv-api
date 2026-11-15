@@ -106,9 +106,8 @@ func TestAnonymousEndpoints(t *testing.T) {
 		t.Fatalf("unknown oauth: code=%d resp=%v", code, resp)
 	}
 
-	// 7. 2FA / passkey / console exchange 占位接口存在（返回 200 与错误提示）
+	// 7. console exchange 接口存在（空 ticket 返回 200 与错误提示）
 	for _, path := range []string{
-		"/user/login/2fa", "/user/passkey/login/begin", "/user/passkey/login/finish",
 		"/user/console_access/exchange",
 	} {
 		code, resp = do(t, r, "POST", path, `{}`, nil)

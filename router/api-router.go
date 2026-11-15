@@ -26,9 +26,6 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/oauth/state", middleware.CriticalRateLimit(), controller.GenerateOAuthCode)
 		apiRouter.GET("/oauth/providers", controller.GetOAuthProviders)
 		apiRouter.POST("/oauth/email/bind", middleware.UserAuth(), middleware.CriticalRateLimit(), controller.EmailBind)
-		// Telegram（预留占位）
-		apiRouter.GET("/oauth/telegram/login", middleware.CriticalRateLimit(), controller.TelegramLogin)
-		apiRouter.GET("/oauth/telegram/bind", middleware.CriticalRateLimit(), controller.TelegramBind)
 		// 微信扫码（与前端 oauth.ts 对齐）
 		apiRouter.POST("/wechat/oauth/preauth", controller.WeChatOAuthPreAuth)
 		apiRouter.GET("/wechat/oauth/callback", controller.WeChatOAuthCallback)
@@ -97,9 +94,6 @@ func SetApiRouter(router *gin.Engine) {
 			userRoute.POST("/register", middleware.CriticalRateLimit(), controller.Register)
 			userRoute.POST("/login", middleware.CriticalRateLimit(), controller.Login)
 			userRoute.POST("/sms_login", middleware.CriticalRateLimit(), controller.SmsLogin)
-			userRoute.POST("/login/2fa", middleware.CriticalRateLimit(), controller.Verify2FALogin)
-			userRoute.POST("/passkey/login/begin", middleware.CriticalRateLimit(), controller.PasskeyLoginBegin)
-			userRoute.POST("/passkey/login/finish", middleware.CriticalRateLimit(), controller.PasskeyLoginFinish)
 			userRoute.POST("/console_access/exchange", middleware.CriticalRateLimit(), controller.ExchangeConsoleAccess)
 			userRoute.GET("/logout", controller.Logout)
 			userRoute.GET("/groups", controller.GetUserGroups)

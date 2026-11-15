@@ -656,13 +656,3 @@ func WeChatOAuthBind(c *gin.Context) {
 	// 绑定流程与登录流程共用 preauth/callback，本期仅实现登录，绑定预留。
 	common.ApiErrorMsg(c, "微信绑定功能暂未开放")
 }
-
-// TelegramLogin 预留：Telegram 登录占位（与前端 oauth.ts 对齐）。
-func TelegramLogin(c *gin.Context) {
-	common.ApiErrorMsg(c, "Telegram 登录暂未开放")
-}
-
-// TelegramBind 预留：Telegram 绑定占位。
-func TelegramBind(c *gin.Context) {
-	common.ApiErrorMsg(c, "Telegram 绑定暂未开放")
-}

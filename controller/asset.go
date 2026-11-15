@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"errors"
+	"fmt"
 	"mime"
+	"net/http"
 	"path"
 	"strings"
 
@@ -38,6 +41,31 @@ func GetMyAssets(c *gin.Context) {
 	pagedResponse(c, list, total)
 }
 
+// uploadFormOverhead multipart 表单在文件之外的开销余量（分隔符、各 part 的头、project_id 等文本字段）。
+const uploadFormOverhead = 1 << 20
+
+// limitUploadBody 把请求体限制在「单文件上限 + 表单开销」以内，必须在解析表单之前调用。
+// Content-Length 已经超限的直接拒绝（返回 false），一个字节都不读；
+// 没带长度或谎报长度的，读到上限时由 MaxBytesReader 截断，见 isBodyTooLarge。
+func limitUploadBody(c *gin.Context) bool {
+	limit := service.UploadMaxBytes + uploadFormOverhead
+	if c.Request.ContentLength > limit {
+		return false
+	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, limit)
+	return true
+}
+
+// isBodyTooLarge 解析表单失败是不是因为撞上了 limitUploadBody 的上限。
+func isBodyTooLarge(err error) bool {
+	var tooLarge *http.MaxBytesError
+	return errors.As(err, &tooLarge)
+}
+
+func uploadTooLargeMsg() string {
+	return fmt.Sprintf("文件超过大小限制（单个文件最大 %d MB）", service.UploadMaxBytes>>20)
+}
+
 // UploadAsset 上传资产（POST /user/asset/upload，multipart 字段 file，可选 project_id）。
 func UploadAsset(c *gin.Context) {
 	userId := c.GetInt("id")
@@ -45,8 +73,18 @@ func UploadAsset(c *gin.Context) {
 		common.ApiErrorMsg(c, "存储未初始化")
 		return
 	}
+	// 先限制请求体再解析表单：FormFile 会把整个 body 读完（超过 32MB 的部分落到临时盘），
+	// 不设上限的话登录用户可以用超大 body 写满临时盘。
+	if !limitUploadBody(c) {
+		common.ApiErrorMsg(c, uploadTooLargeMsg())
+		return
+	}
 	header, err := c.FormFile("file")
 	if err != nil {
+		if isBodyTooLarge(err) {
+			common.ApiErrorMsg(c, uploadTooLargeMsg())
+			return
+		}
 		common.ApiErrorMsg(c, "请选择要上传的文件")
 		return
 	}
@@ -55,7 +93,7 @@ func UploadAsset(c *gin.Context) {
 		return
 	}
 	if header.Size > service.UploadMaxBytes {
-		common.ApiErrorMsg(c, "文件超过大小限制")
+		common.ApiErrorMsg(c, uploadTooLargeMsg())
 		return
 	}
 	// 资产空间（API.md 20）：传了项目就跟项目走（自己的项目，或自己所在团队的团队项目），否则用请求空间

@@ -1,8 +1,11 @@
 package controller
 
 import (
+	"errors"
 	"strings"
 	"testing"
+
+	"easytv-api/model"
 )
 
 func TestWithdrawFailureMsg(t *testing.T) {
@@ -18,5 +21,36 @@ func TestWithdrawFailureMsg(t *testing.T) {
 	}
 	if msg, err := withdrawFailureMsg(strings.Repeat("失", 255)); err != "" || len([]rune(msg)) != 255 {
 		t.Fatalf("255 字应通过，得到 %q %q", msg, err)
+	}
+}
+
+func TestWithdrawTransactionNo(t *testing.T) {
+	if _, msg := withdrawTransactionNo("   "); msg == "" {
+		t.Fatal("空流水号应拒绝")
+	}
+	if _, msg := withdrawTransactionNo(strings.Repeat("9", withdrawTransactionNoMax+1)); msg == "" {
+		t.Fatal("超长流水号应拒绝")
+	}
+	if no, msg := withdrawTransactionNo("  4200001234202611140001  "); msg != "" || no != "4200001234202611140001" {
+		t.Fatalf("正常流水号应去空格后通过：%q %q", no, msg)
+	}
+}
+
+func TestWithdrawStatusError(t *testing.T) {
+	if got := withdrawStatusError(model.ErrWithdrawStatus, "只有待审核的提现单可以审核"); got != "只有待审核的提现单可以审核" {
+		t.Fatalf("状态不对应给人话：%q", got)
+	}
+	got := withdrawStatusError(errors.New("Error 1406: Data too long for column 'audit_remark'"), "x")
+	if strings.Contains(got, "1406") || strings.Contains(got, "audit_remark") {
+		t.Fatalf("数据库原文不能外露：%q", got)
+	}
+}
+
+func TestRefundWithdrawBalanceNothingToRefund(t *testing.T) {
+	if err := refundWithdrawBalance(nil, "x"); err != nil {
+		t.Fatal(err)
+	}
+	if err := refundWithdrawBalance(&model.Withdraw{Amount: 0}, "x"); err != nil {
+		t.Fatal(err)
 	}
 }
