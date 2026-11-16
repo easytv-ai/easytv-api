@@ -383,9 +383,11 @@ func GetProjectScreenplays(userId, projectId int) ([]*Screenplay, error) {
 	return list, err
 }
 
-// NextEpisodeNo 项目下一集的集号。
+// NextEpisodeNo 项目下一集的集号。失败的生成不占号，否则目录里只有第 1 集时下一集也会跳到第 5 集。
 func NextEpisodeNo(userId, projectId int) int {
 	var maxNo int
-	DB.Model(&Screenplay{}).Where("user_id = ? AND project_id = ?", userId, projectId).Select("COALESCE(MAX(episode_no),0)").Scan(&maxNo)
+	DB.Model(&Screenplay{}).
+		Where("user_id = ? AND project_id = ? AND status <> ?", userId, projectId, ScreenplayStatusFailed).
+		Select("COALESCE(MAX(episode_no),0)").Scan(&maxNo)
 	return maxNo + 1
 }
