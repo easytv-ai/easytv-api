@@ -84,9 +84,12 @@ type PlanLine struct {
 
 const (
 	PlanMaxDialogue = 12
-	PlanLineMaxLen  = 200
-	PlanStateMaxLen = 100
-	PlanNarrator    = "narrator"
+	// 单镜时长。0 表示没填，按整片均摊；填了但不在区间内就收到上下限，不再改成均摊秒数。
+	PlanShotMinSeconds = 3
+	PlanShotMaxSeconds = 10
+	PlanLineMaxLen     = 200
+	PlanStateMaxLen    = 100
+	PlanNarrator       = "narrator"
 )
 
 type PlanScene struct {
@@ -222,8 +225,13 @@ func (p *Plan) Normalize(targetSeconds int) error {
 		if s.Prompt == "" {
 			return ErrPlanInvalid
 		}
-		if s.Seconds < 3 || s.Seconds > 10 {
+		switch {
+		case s.Seconds <= 0:
 			s.Seconds = perShot
+		case s.Seconds < PlanShotMinSeconds:
+			s.Seconds = PlanShotMinSeconds
+		case s.Seconds > PlanShotMaxSeconds:
+			s.Seconds = PlanShotMaxSeconds
 		}
 		// 引用校验：场景可以留空（未指定），非空必须存在；人物去掉空串后必须都存在
 		if s.Scene != "" && !sceneKeys[s.Scene] {
