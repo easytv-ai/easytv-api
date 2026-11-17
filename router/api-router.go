@@ -97,6 +97,8 @@ func SetApiRouter(router *gin.Engine) {
 			userRoute.POST("/console_access/exchange", middleware.CriticalRateLimit(), controller.ExchangeConsoleAccess)
 			userRoute.GET("/logout", controller.Logout)
 			userRoute.GET("/groups", controller.GetUserGroups)
+			// 画布实时。浏览器 WebSocket 带不上 EasyTV-User，鉴权在升级后的第一帧，不走 UserAuth。
+			userRoute.GET("/canvas/:id/live", controller.CanvasLive)
 
 			selfRoute := userRoute.Group("/")
 			// TeamSpace：请求头 EasyTV-Team 选择个人 / 团队空间（API.md 20），必须在 UserAuth 之后

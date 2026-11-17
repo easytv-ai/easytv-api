@@ -228,6 +228,7 @@ func SaveCanvas(c *gin.Context) {
 	} else {
 		model.TouchProject(cv.ProjectId)
 	}
+	service.CanvasLive().Saved(id, userId, newVersion)
 	common.ApiSuccess(c, gin.H{
 		"id":         id,
 		"version":    newVersion,
@@ -361,6 +362,7 @@ func RestoreMyCanvasVersion(c *gin.Context) {
 	view := cv.View(true)
 	view["version"] = newVersion
 	view["updated_at"] = updatedAt
+	service.CanvasLive().Saved(id, userId, newVersion)
 	common.ApiSuccess(c, view)
 }
 
