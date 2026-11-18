@@ -84,8 +84,8 @@ func TestPublicWorksFeed(t *testing.T) {
 	mock.ExpectQuery("SELECT .* FROM `work` WHERE status = \\?").WillReturnRows(
 		sqlmock.NewRows([]string{"id", "user_id", "title", "video_url", "status", "published_at"}).AddRow(7, 1, "星空山巅", "/upload/a.mp4", 1, 1700000000),
 	)
-	mock.ExpectQuery("SELECT id, nickname, username FROM `user` WHERE id IN").WillReturnRows(
-		sqlmock.NewRows([]string{"id", "nickname"}).AddRow(1, "测试用户"),
+	mock.ExpectQuery("SELECT id, nickname, username, setting FROM `user` WHERE id IN").WillReturnRows(
+		sqlmock.NewRows([]string{"id", "nickname", "username", "setting"}).AddRow(1, "测试用户", "u@example.com", `{"avatar":"/upload/a.png"}`),
 	)
 
 	code, resp := do(t, r, "GET", "/work?page=1&page_size=10", "", nil)
@@ -98,7 +98,7 @@ func TestPublicWorksFeed(t *testing.T) {
 		t.Fatalf("feed should return 1 item: %v", data)
 	}
 	author := items[0].(map[string]any)["author"].(map[string]any)
-	if author["nickname"] != "测试用户" {
+	if author["nickname"] != "测试用户" || author["avatar"] != "/upload/a.png" {
 		t.Fatalf("author should be attached: %v", items[0])
 	}
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -309,9 +309,13 @@ func TestGetMyWorksKeyword(t *testing.T) {
 	mock.ExpectQuery("SELECT .* FROM `work` WHERE user_id = \\? AND status = \\? AND title LIKE \\?").
 		WithArgs(1, 1, "%星空%").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "status"}).AddRow(7, 1, "星空山巅", 1))
-	mock.ExpectQuery("SELECT id, nickname, username FROM `user` WHERE id IN").WillReturnRows(
-		sqlmock.NewRows([]string{"id", "nickname"}).AddRow(1, "测试用户"),
+	mock.ExpectQuery("SELECT id, nickname, username, setting FROM `user` WHERE id IN").WillReturnRows(
+		sqlmock.NewRows([]string{"id", "nickname", "username", "setting"}).AddRow(1, "测试用户", "", ""),
 	)
+	mock.ExpectQuery("SELECT work_id, COUNT\\(DISTINCT user_id\\) AS n FROM `work_follow`").
+		WillReturnRows(sqlmock.NewRows([]string{"work_id", "n"}))
+	mock.ExpectQuery("SELECT project.source_work_id").
+		WillReturnRows(sqlmock.NewRows([]string{"source_work_id", "n"}))
 
 	code, resp := do(t, r, "GET", "/user/work?status=1&keyword=星空&page=1&page_size=24", "", authHeaders())
 	if code != http.StatusOK || resp["success"] != true {

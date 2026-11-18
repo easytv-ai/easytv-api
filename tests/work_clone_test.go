@@ -22,8 +22,8 @@ func TestCloneWorkRequiresOpenSource(t *testing.T) {
 	mock.ExpectQuery("SELECT .* FROM `work` WHERE").WillReturnRows(
 		sqlmock.NewRows(workRowCols()).AddRow(7, 2, "星空山巅", "/upload/a.mp4", 1, 1700000000, 3, true, 3, 0, 0, 0),
 	)
-	mock.ExpectQuery("SELECT id, nickname, username FROM `user` WHERE id IN").WillReturnRows(
-		sqlmock.NewRows([]string{"id", "nickname"}).AddRow(2, "作者"),
+	mock.ExpectQuery("SELECT id, nickname, username, setting FROM `user` WHERE id IN").WillReturnRows(
+		sqlmock.NewRows([]string{"id", "nickname", "username", "setting"}).AddRow(2, "作者", "", ""),
 	)
 	code, resp := do(t, r, "POST", "/user/work/7/clone", "", authHeaders())
 	if code != http.StatusOK || resp["success"] != false || resp["message"] != "作者未开放做同款" {
@@ -42,8 +42,8 @@ func TestCloneWorkCopiesCanvas(t *testing.T) {
 	mock.ExpectQuery("SELECT .* FROM `work` WHERE").WillReturnRows(
 		sqlmock.NewRows(workRowCols()).AddRow(7, 2, "星空山巅", "/upload/a.mp4", 1, 1700000000, 0, false, 3, 11, 1, 4),
 	)
-	mock.ExpectQuery("SELECT id, nickname, username FROM `user` WHERE id IN").WillReturnRows(
-		sqlmock.NewRows([]string{"id", "nickname"}).AddRow(2, "作者"),
+	mock.ExpectQuery("SELECT id, nickname, username, setting FROM `user` WHERE id IN").WillReturnRows(
+		sqlmock.NewRows([]string{"id", "nickname", "username", "setting"}).AddRow(2, "作者", "", ""),
 	)
 	// 来源画布按作者查（不是当前用户）
 	mock.ExpectQuery("SELECT .* FROM `canvas` WHERE \\(id = \\? AND user_id = \\?\\)").WithArgs(3, 2).WillReturnRows(

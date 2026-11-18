@@ -1,7 +1,9 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
+	"strings"
 
 	"easytv-api/common"
 
@@ -161,10 +163,11 @@ func GetLikedWorks(userId int, pageInfo *common.PageInfo) (list []*Work, total i
 	return list, total, nil
 }
 
-// WorkAuthor 作品作者摘要。
+// WorkAuthor 作品作者摘要。头像来自用户资料 setting.avatar。
 type WorkAuthor struct {
 	Id       int    `json:"id"`
 	Nickname string `json:"nickname"`
+	Avatar   string `json:"avatar,omitempty"`
 }
 
 func (Work) TableName() string { return "work" }
@@ -318,7 +321,22 @@ func GetUserNicknames(ids []int) map[int]string {
 	return names
 }
 
-// attachWorkAuthors 填充作者昵称。
+// settingAvatar 从用户 setting JSON 里取出头像地址。
+func settingAvatar(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	var parsed struct {
+		Avatar string `json:"avatar"`
+	}
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(parsed.Avatar)
+}
+
+// attachWorkAuthors 填充作者昵称和头像。
 func attachWorkAuthors(list []*Work) {
 	if len(list) == 0 {
 		return
@@ -327,9 +345,30 @@ func attachWorkAuthors(list []*Work) {
 	for _, w := range list {
 		ids = append(ids, w.UserId)
 	}
-	names := GetUserNicknames(ids)
+	var users []struct {
+		Id       int
+		Nickname string
+		Username string
+		Setting  string
+	}
+	DB.Unscoped().Model(&User{}).Select("id, nickname, username, setting").Where("id IN ?", ids).Scan(&users)
+	byId := make(map[int]struct {
+		Name   string
+		Avatar string
+	}, len(users))
+	for _, u := range users {
+		name := u.Nickname
+		if name == "" {
+			name = u.Username
+		}
+		byId[u.Id] = struct {
+			Name   string
+			Avatar string
+		}{Name: name, Avatar: settingAvatar(u.Setting)}
+	}
 	for _, w := range list {
-		w.Author = &WorkAuthor{Id: w.UserId, Nickname: names[w.UserId]}
+		brief := byId[w.UserId]
+		w.Author = &WorkAuthor{Id: w.UserId, Nickname: brief.Name, Avatar: brief.Avatar}
 	}
 }
 
