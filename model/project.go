@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"strings"
+	"unicode/utf8"
 
 	"easytv-api/common"
 
@@ -11,16 +12,18 @@ import (
 
 // Project 项目：用户创作的容器，一个项目下可有多个画布与资产。见 API.md 1.1。
 type Project struct {
-	Id          int            `json:"id" gorm:"comment:项目ID"`
-	UserId      int            `json:"user_id" gorm:"index;comment:所有者用户ID"`
-	TeamId      int            `json:"team_id" gorm:"index;default:0;comment:所属团队空间ID（0 个人空间，API.md 20）"`
-	Name        string         `json:"name" gorm:"type:varchar(100);comment:项目名"`
-	Description string         `json:"description" gorm:"type:varchar(500);default:'';comment:描述"`
-	CoverUrl    string         `json:"cover_url" gorm:"type:varchar(500);default:'';comment:封面地址"`
-	Status      int            `json:"status" gorm:"default:1;comment:状态：1=正常"`
-	CreatedAt   int64          `json:"created_at" gorm:"bigint;comment:创建时间（Unix 秒）"`
-	UpdatedAt   int64          `json:"updated_at" gorm:"bigint;comment:更新时间（Unix 秒）"`
-	DeletedAt   gorm.DeletedAt `json:"deleted_at" gorm:"index;comment:回收站时间"`
+	Id          int    `json:"id" gorm:"comment:项目ID"`
+	UserId      int    `json:"user_id" gorm:"index;comment:所有者用户ID"`
+	TeamId      int    `json:"team_id" gorm:"index;default:0;comment:所属团队空间ID（0 个人空间，API.md 20）"`
+	Name        string `json:"name" gorm:"type:varchar(100);comment:项目名"`
+	Description string `json:"description" gorm:"type:varchar(500);default:'';comment:描述"`
+	// SourceWorkId 做同款复制出来的项目记来源作品。0 表示不是从作品复制来的。不进项目接口。
+	SourceWorkId int            `json:"-" gorm:"index;default:0;comment:做同款来源作品 ID，0 表示不是从作品复制来的项目"`
+	CoverUrl     string         `json:"cover_url" gorm:"type:varchar(500);default:'';comment:封面地址"`
+	Status       int            `json:"status" gorm:"default:1;comment:状态：1=正常"`
+	CreatedAt    int64          `json:"created_at" gorm:"bigint;comment:创建时间（Unix 秒）"`
+	UpdatedAt    int64          `json:"updated_at" gorm:"bigint;comment:更新时间（Unix 秒）"`
+	DeletedAt    gorm.DeletedAt `json:"deleted_at" gorm:"index;comment:回收站时间"`
 
 	// CanvasId 列表附带：该项目最近更新的画布 id（非表字段）
 	CanvasId int `json:"canvas_id" gorm:"-"`
@@ -38,6 +41,17 @@ type Project struct {
 }
 
 func (Project) TableName() string { return "project" }
+
+// backfillProjectSourceWork 把旧的「做同款：来自作品 #id」说明写成可查询的来源作品号。
+// 说明被改过的项目不动。已有来源号的不覆盖。
+func backfillProjectSourceWork() error {
+	prefix := "做同款：来自作品 #"
+	return DB.Exec(
+		"UPDATE project SET source_work_id = CAST(SUBSTRING(description, ?) AS UNSIGNED) WHERE source_work_id = 0 AND description REGEXP ?",
+		utf8.RuneCountInString(prefix)+1,
+		"^"+prefix+"[0-9]+$",
+	).Error
+}
 
 const ProjectStatusNormal = 1
 

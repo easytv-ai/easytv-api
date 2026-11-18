@@ -43,16 +43,28 @@ type canvasLiveWire struct {
 	Items   []CanvasLiveNode `json:"items,omitempty"`
 	Version int              `json:"version,omitempty"`
 	User    *CanvasLiveUser  `json:"user,omitempty"`
-	Peers   []CanvasLiveUser `json:"peers,omitempty"`
+	Peers   []canvasLivePeer `json:"peers,omitempty"`
 	Id      int              `json:"id,omitempty"`
 }
 
+// canvasLivePeer 进房时带上这个人最后一次光标。坐标可以是 0，所以用指针区分「没动过」。
+type canvasLivePeer struct {
+	Id    int      `json:"id"`
+	Name  string   `json:"name"`
+	Color string   `json:"color"`
+	X     *float64 `json:"x,omitempty"`
+	Y     *float64 `json:"y,omitempty"`
+}
+
 // cursorWire 光标坐标可以是 0，不能用 omitempty。
+// 名字和颜色一起带上：对方如果漏掉了 join，仍能凭这一帧把人画出来。
 type cursorWire struct {
-	Op string  `json:"op"`
-	Id int     `json:"id"`
-	X  float64 `json:"x"`
-	Y  float64 `json:"y"`
+	Op    string  `json:"op"`
+	Id    int     `json:"id"`
+	Name  string  `json:"name,omitempty"`
+	Color string  `json:"color,omitempty"`
+	X     float64 `json:"x"`
+	Y     float64 `json:"y"`
 }
 
 type CanvasLivePeer struct {
@@ -76,9 +88,22 @@ func (p *CanvasLivePeer) closeSend() {
 }
 
 type canvasLiveSlot struct {
-	user     CanvasLiveUser
-	writable bool
-	conns    []*CanvasLivePeer
+	user      CanvasLiveUser
+	writable  bool
+	conns     []*CanvasLivePeer
+	hasCursor bool
+	cursorX   float64
+	cursorY   float64
+}
+
+func (s *canvasLiveSlot) presence() canvasLivePeer {
+	view := canvasLivePeer{Id: s.user.Id, Name: s.user.Name, Color: s.user.Color}
+	if s.hasCursor {
+		x, y := s.cursorX, s.cursorY
+		view.X = &x
+		view.Y = &y
+	}
+	return view
 }
 
 type canvasLiveRoom struct {
@@ -181,15 +206,25 @@ func (h *CanvasLiveHub) Join(canvasId int, user CanvasLiveUser, writable bool) (
 		slot.writable = true
 	}
 	slot.conns = append(slot.conns, peer)
-	others := make([]CanvasLiveUser, 0, len(room.slots))
+	others := make([]canvasLivePeer, 0, len(room.slots))
 	for id, item := range room.slots {
 		if id == user.Id {
 			continue
 		}
-		others = append(others, item.user)
+		others = append(others, item.presence())
 	}
 	if first {
 		h.broadcastOthersLocked(room, user.Id, canvasLiveWire{Op: "join", User: &slot.user})
+	} else {
+		// 同一个账号又开了一个窗口。别的人已经认识他，只告诉他自己的其他窗口。
+		// 新窗口的名单里也放一份自己，并带上另一个窗口最后的光标。
+		others = append(others, slot.presence())
+		notice := mustLiveJSON(canvasLiveWire{Op: "join", User: &slot.user})
+		for _, item := range slot.conns {
+			if item != peer {
+				item.TrySend(notice)
+			}
+		}
 	}
 	return peer, canvasLiveHello(slot.user, others)
 }
@@ -244,7 +279,12 @@ func (h *CanvasLiveHub) Relay(canvasId int, peer *CanvasLivePeer, op string, x, 
 	}
 	var raw []byte
 	if op == "cursor" {
-		raw = mustLiveJSON(cursorWire{Op: "cursor", Id: peer.User.Id, X: x, Y: y})
+		if slot := room.slots[peer.User.Id]; slot != nil {
+			slot.cursorX = x
+			slot.cursorY = y
+			slot.hasCursor = true
+		}
+		raw = mustLiveJSON(cursorWire{Op: "cursor", Id: peer.User.Id, Name: peer.User.Name, Color: peer.User.Color, X: x, Y: y})
 	} else if op == "nodes" {
 		raw = mustLiveJSON(canvasLiveWire{Op: "nodes", Id: peer.User.Id, Items: items})
 	} else {
@@ -302,6 +342,6 @@ func mustLiveJSON(msg any) []byte {
 	return raw
 }
 
-func canvasLiveHello(self CanvasLiveUser, peers []CanvasLiveUser) []byte {
+func canvasLiveHello(self CanvasLiveUser, peers []canvasLivePeer) []byte {
 	return mustLiveJSON(canvasLiveWire{Op: "hello", User: &self, Peers: peers})
 }

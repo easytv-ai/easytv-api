@@ -135,6 +135,7 @@ func migrateDB() error {
 		&Campaign{},
 		&CampaignEntry{},
 		&UserFollow{},
+		&WorkFollow{},
 		&Partner{},
 		&PartnerCustomer{},
 		&Subject{},
@@ -162,7 +163,10 @@ func migrateDB() error {
 	); err != nil {
 		return err
 	}
-	return backfillRechargeInvoiceable()
+	if err := backfillRechargeInvoiceable(); err != nil {
+		return err
+	}
+	return backfillProjectSourceWork()
 }
 
 // backfillRechargeInvoiceable 历史充值单从未写过可开票金额：未开票且待支付/成功的按实付补上。

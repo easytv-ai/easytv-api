@@ -387,6 +387,31 @@ func TestSubjectUpdateBumpsVersion(t *testing.T) {
 	}
 }
 
+// TestTeammateCanvasChatAndBatch 编辑者进团队画布时，对话和批量不再因为「不是作者」返回资源不存在。
+func TestTeammateCanvasChatAndBatch(t *testing.T) {
+	mock := initMockDB(t)
+	r := initTestRouter()
+	teammateCanvasExpect(mock, 3, "editor")
+	mock.ExpectQuery("SELECT .* FROM `canvas_chat`").WillReturnRows(sqlmock.NewRows([]string{"id"}))
+	_, chat := do(t, r, "GET", "/user/canvas/9/chat", "", authHeaders())
+	if chat["success"] != true {
+		t.Fatalf("editor chat: %v", chat)
+	}
+
+	teammateCanvasExpect(mock, 3, "editor")
+	mock.ExpectQuery("SELECT .* FROM `generation_batch`").WillReturnRows(sqlmock.NewRows([]string{"id"}))
+	_, batch := do(t, r, "GET", "/user/canvas/9/batch", "", authHeaders())
+	if batch["success"] != true {
+		t.Fatalf("editor batch: %v", batch)
+	}
+
+	teammateCanvasExpect(mock, 3, "viewer")
+	_, denied := do(t, r, "POST", "/user/canvas/9/batch", `{}`, authHeaders())
+	if denied["success"] != false {
+		t.Fatalf("viewer batch: %v", denied)
+	}
+}
+
 // TestTeammateCanvasEditor 编辑者打开队友画布可编辑（readonly=false）。
 func TestTeammateCanvasEditor(t *testing.T) {
 	mock := initMockDB(t)

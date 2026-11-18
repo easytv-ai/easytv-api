@@ -8,6 +8,15 @@ import (
 	"testing"
 )
 
+func livePeersHave(peers []canvasLivePeer, id int) bool {
+	for _, item := range peers {
+		if item.Id == id {
+			return true
+		}
+	}
+	return false
+}
+
 func takeLive(t *testing.T, ch <-chan []byte) canvasLiveWire {
 	t.Helper()
 	select {
@@ -47,15 +56,42 @@ func TestCanvasLiveRelay(t *testing.T) {
 		t.Fatalf("cursor echoed to sender: %s", raw)
 	default:
 	}
-	adaAgain, _ := hub.Join(7, CanvasLiveUser{Id: 1, Name: "Ada"}, true)
+	adaAgain, helloAgain := hub.Join(7, CanvasLiveUser{Id: 1, Name: "Ada"}, true)
 	if adaAgain == nil {
 		t.Fatal("second conn")
+	}
+	var again canvasLiveWire
+	if json.Unmarshal(helloAgain, &again) != nil || !livePeersHave(again.Peers, 1) {
+		t.Fatalf("second window hello: %s", helloAgain)
+	}
+	for _, item := range again.Peers {
+		if item.Id != 1 {
+			continue
+		}
+		if item.X == nil || item.Y == nil || *item.X != 0 || *item.Y != 34 {
+			t.Fatalf("second window missing the earlier cursor: %+v", item)
+		}
+	}
+	selfJoin := takeLive(t, ada.send)
+	if selfJoin.Op != "join" || selfJoin.User == nil || selfJoin.User.Id != 1 {
+		t.Fatalf("other window was not told: %+v", selfJoin)
 	}
 	select {
 	case raw := <-bo.send:
 		t.Fatalf("second conn should not join again: %s", raw)
 	default:
 	}
+	hub.Relay(7, ada, "cursor", 3, 4, nil)
+	var followed cursorWire
+	select {
+	case raw := <-adaAgain.send:
+		if json.Unmarshal(raw, &followed) != nil || followed.Name != "Ada" || followed.X != 3 || followed.Y != 4 {
+			t.Fatalf("cursor to other window: %s", raw)
+		}
+	default:
+		t.Fatal("other window missed cursor")
+	}
+	_ = takeLive(t, bo.send)
 	view, _ := hub.Join(7, CanvasLiveUser{Id: 3, Name: "Vi"}, false)
 	if view == nil {
 		t.Fatal("viewer")

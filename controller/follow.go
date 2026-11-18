@@ -28,15 +28,35 @@ func ToggleFollowAuthor(c *gin.Context) {
 		common.ApiErrorMsg(c, "作者不存在")
 		return
 	}
+	workId := followWorkID(c)
 	following, followers, err := model.ToggleFollow(userId, authorId)
 	if err != nil {
 		respondModelError(c, err, "操作失败")
 		return
 	}
+	if following && workId > 0 {
+		if err := model.RecordWorkFollow(userId, authorId, workId); err != nil {
+			common.SysError(fmt.Sprintf("record work follow user=%d author=%d work=%d: %v", userId, authorId, workId, err))
+		}
+	}
 	if following {
-		service.Track(userId, "follow_author", map[string]any{"author_id": authorId})
+		service.Track(userId, "follow_author", map[string]any{"author_id": authorId, "work_id": workId})
 	}
 	common.ApiSuccess(c, gin.H{"following": following, "followers": followers})
+}
+
+// followWorkID 播放页关注时带上当前作品。空请求体、作者页和榜单都不带，记不成某一条。
+func followWorkID(c *gin.Context) int {
+	if c.Request.Body == nil || c.Request.ContentLength == 0 {
+		return 0
+	}
+	var req struct {
+		WorkId int `json:"work_id"`
+	}
+	if err := common.DecodeJson(c.Request.Body, &req); err != nil || req.WorkId <= 0 {
+		return 0
+	}
+	return req.WorkId
 }
 
 // GetMyFollowingFeed GET /user/following

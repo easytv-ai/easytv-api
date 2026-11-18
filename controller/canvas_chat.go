@@ -6,11 +6,13 @@ import (
 
 	"easytv-api/common"
 	"easytv-api/model"
+	"easytv-api/service"
 
 	"github.com/gin-gonic/gin"
 )
 
-// 画布右侧对话（API.md 2.1）：会话和历史都挂在当前用户的这张画布上。
+// 画布右侧对话（API.md 2.1）：会话仍挂在当前用户名下。
+// 团队项目里的画布按 CanvasAccess 放行，编辑者进队友画布也能打开自己的对话。
 
 type canvasChatBody struct {
 	Title    string          `json:"title"`
@@ -18,7 +20,7 @@ type canvasChatBody struct {
 }
 
 func loadOwnCanvas(c *gin.Context) (*model.Canvas, bool) {
-	cv, err := model.GetUserCanvas(c.GetInt("id"), paramInt(c, "id"))
+	cv, _, err := service.CanvasAccess(c.GetInt("id"), paramInt(c, "id"))
 	if err != nil {
 		respondModelError(c, err, "查询画布失败")
 		return nil, false

@@ -16,6 +16,62 @@ type UserFollow struct {
 
 func (UserFollow) TableName() string { return "user_follow" }
 
+// WorkFollow 从某部已发布作品的播放页点下的关注。只追加，取关不删。
+// 同一人在 30 天内对同一部作品反复关注，列表里只算一个人。
+type WorkFollow struct {
+	Id        int   `json:"id"`
+	UserId    int   `json:"user_id" gorm:"index;comment:关注的人"`
+	AuthorId  int   `json:"author_id" gorm:"comment:被关注的作者"`
+	WorkId    int   `json:"work_id" gorm:"index:idx_work_follow_work,priority:1;comment:从哪部已发布作品点的关注"`
+	CreatedAt int64 `json:"created_at" gorm:"bigint;index:idx_work_follow_work,priority:2;comment:关注时间"`
+}
+
+func (WorkFollow) TableName() string { return "work_follow" }
+
+// RecordWorkFollow 播放页关注成功后记一笔。作品不是这位作者的已发布作品时不记，也不影响关注本身。
+func RecordWorkFollow(userId, authorId, workId int) error {
+	if userId <= 0 || authorId <= 0 || workId <= 0 || userId == authorId {
+		return nil
+	}
+	var n int64
+	if err := DB.Model(&Work{}).Where("id = ? AND user_id = ? AND status = ?", workId, authorId, WorkStatusPublished).Count(&n).Error; err != nil {
+		return err
+	}
+	if n == 0 {
+		return nil
+	}
+	return DB.Create(&WorkFollow{
+		UserId:    userId,
+		AuthorId:  authorId,
+		WorkId:    workId,
+		CreatedAt: common.GetTimestamp(),
+	}).Error
+}
+
+// CountWorkFollowsSince 每部作品在 since 之后有多少不同的人从播放页关注过。
+func CountWorkFollowsSince(workIds []int, since int64) (map[int]int, error) {
+	out := map[int]int{}
+	if len(workIds) == 0 {
+		return out, nil
+	}
+	var rows []struct {
+		WorkId int
+		N      int
+	}
+	err := DB.Model(&WorkFollow{}).
+		Select("work_id, COUNT(DISTINCT user_id) AS n").
+		Where("work_id IN ? AND created_at >= ?", workIds, since).
+		Group("work_id").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		out[row.WorkId] = row.N
+	}
+	return out, nil
+}
+
 // ToggleFollow 关注 / 取关，返回关注后状态与作者粉丝数。
 func ToggleFollow(userId, authorId int) (following bool, followers int64, err error) {
 	if userId <= 0 || authorId <= 0 || userId == authorId {

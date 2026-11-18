@@ -177,7 +177,7 @@ func CloneWork(c *gin.Context) {
 	if name == "" {
 		name = src.Name
 	}
-	cv, err := model.CopyCanvasToUser(userId, src, "同款 · "+name, fmt.Sprintf("做同款：来自作品 #%d", w.Id))
+	cv, err := model.CopyCanvasToUser(userId, src, "同款 · "+name, fmt.Sprintf("做同款：来自作品 #%d", w.Id), w.Id)
 	if err != nil {
 		respondModelError(c, err, "复制失败")
 		return
@@ -225,6 +225,10 @@ func GetMyWorks(c *gin.Context) {
 	}
 	list, total, err := model.GetWorks(filter, parsePageInfo(c))
 	if err != nil {
+		respondModelError(c, err, "查询失败")
+		return
+	}
+	if err := model.AttachWorkGrowth(list); err != nil {
 		respondModelError(c, err, "查询失败")
 		return
 	}

@@ -356,12 +356,13 @@ func stripAssetRefs(v any) {
 
 // CopySharedCanvas 把分享的画布复制成当前用户的新项目 + 画布。
 func CopySharedCanvas(userId int, src *Canvas) (*Canvas, error) {
-	return CopyCanvasToUser(userId, src, "副本 · "+src.Name, "从分享链接复制")
+	return CopyCanvasToUser(userId, src, "副本 · "+src.Name, "从分享链接复制", 0)
 }
 
 // CopyCanvasToUser 把画布 graph 去敏后复制成 userId 的新项目 + 画布（分享复制与做同款共用）。
 // name 为新项目 / 画布名（空取「未命名草稿」，超长截断），projectDesc 记来源。
-func CopyCanvasToUser(userId int, src *Canvas, name, projectDesc string) (*Canvas, error) {
+// sourceWorkId 仅做同款传入被复制的作品 ID，分享复制传 0。
+func CopyCanvasToUser(userId int, src *Canvas, name, projectDesc string, sourceWorkId int) (*Canvas, error) {
 	name = strings.TrimSpace(name)
 	if name == "" || name == "副本 ·" || name == "同款 ·" {
 		name = "未命名草稿"
@@ -369,7 +370,7 @@ func CopyCanvasToUser(userId int, src *Canvas, name, projectDesc string) (*Canva
 	if len([]rune(name)) > 96 {
 		name = string([]rune(name)[:96])
 	}
-	p := &Project{UserId: userId, Name: name, Description: projectDesc}
+	p := &Project{UserId: userId, Name: name, Description: projectDesc, SourceWorkId: sourceWorkId}
 	if err := p.Insert(); err != nil {
 		return nil, err
 	}

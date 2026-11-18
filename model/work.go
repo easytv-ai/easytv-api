@@ -49,6 +49,10 @@ type Work struct {
 	Liked bool `json:"liked" gorm:"-"`
 	// Source 开源作品的来源信息（非表字段，open_source=1 时由 AttachSource 填充）
 	Source *WorkSource `json:"source,omitempty" gorm:"-"`
+	// Follow30d 近 30 天从这部片子的播放页点下去的关注人数（我的作品列表才填）
+	Follow30d int `json:"follow_30d,omitempty" gorm:"-"`
+	// RemixWorks 从这部作品做同款后，又发布出来的成片数（我的作品列表才填）
+	RemixWorks int `json:"remix_works,omitempty" gorm:"-"`
 }
 
 // WorkSource 公开详情里的做同款来源（API.md 7.2）。

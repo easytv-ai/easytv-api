@@ -15,9 +15,8 @@ import (
 // CreateMyCanvasBatch POST /user/canvas/:id/batch
 func CreateMyCanvasBatch(c *gin.Context) {
 	userId := c.GetInt("id")
-	cv, err := model.GetUserCanvas(userId, paramInt(c, "id"))
-	if err != nil {
-		respondModelError(c, err, "查询画布失败")
+	cv, ok := writableCanvas(c, userId, paramInt(c, "id"))
+	if !ok {
 		return
 	}
 	var req service.BatchRequest
@@ -42,9 +41,10 @@ func CreateMyCanvasBatch(c *gin.Context) {
 }
 
 // GetMyCanvasBatch GET /user/canvas/:id/batch：画布最近一个批次（含条目）；没有返回 data=null。
+// 团队画布按 CanvasAccess 放行。批次仍属于提交它的那个用户。
 func GetMyCanvasBatch(c *gin.Context) {
 	userId := c.GetInt("id")
-	cv, err := model.GetUserCanvas(userId, paramInt(c, "id"))
+	cv, _, err := service.CanvasAccess(userId, paramInt(c, "id"))
 	if err != nil {
 		respondModelError(c, err, "查询画布失败")
 		return
