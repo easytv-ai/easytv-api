@@ -169,6 +169,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.GET("/asset/trash", controller.GetMyTrashAssets)
 				selfRoute.POST("/asset/upload", controller.UploadAsset)
 				selfRoute.POST("/asset/import", controller.ImportMyAssets) // 跨空间引入（API.md 36.1）
+				selfRoute.POST("/asset/delete", controller.TrashMyAssets)  // 多选进回收站
 				selfRoute.GET("/asset/:id", controller.GetMyAsset)
 				selfRoute.GET("/asset/:id/refs", controller.GetMyAssetRefs)
 				selfRoute.POST("/asset/:id/extend", middleware.UserCriticalRateLimit("task"), controller.ExtendMyAsset)

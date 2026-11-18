@@ -1281,6 +1281,7 @@ worker 每轮：
 
 - `GET /user/asset/:id/refs` → `{ refs: [{ type: canvas|subject|work|timeline, id, name, node_ids? }] }`，最多 20 处。画布按节点数据里任意 `assetId / asset_id / *AssetId` 键精确匹配（含 refItems、导演台场景），主体看封面与参考图，作品看成片资产，时间线看换上的候选。不维护引用表，按用户范围 LIKE 粗筛后解析 JSON 确认。
 - `DELETE /user/asset/:id`：仍有引用时返回 `success=false`，message「该素材正在被 N 张画布、M 个主体… 使用，删除后这些地方会失效」，`data={ reason: 'in_use', refs }`；确认后带 `?force=1` 再删。前端资产页据此二次确认并列出引用。
+- `POST /user/asset/delete`：多选进回收站，`{ ids, force? }`，一次最多 100 条，只删上传者本人的。`force` 缺省时，没被引用的放进 `trashed` 并软删，正在使用的留在 `in_use`（`{ id, name, refs }`，不删），不是本人的放进 `missing`。确认后对 `in_use` 的 id 再请求一次并带 `force: true`。
 
 ### 14.2 主体版本
 

@@ -213,6 +213,14 @@ func DeleteUserAsset(userId, id int) error {
 	return nil
 }
 
+// DeleteUserAssets 把本人的多条资产一并软删除。空列表不碰表。
+func DeleteUserAssets(userId int, ids []int) error {
+	if userId <= 0 || len(ids) == 0 {
+		return nil
+	}
+	return DB.Where("user_id = ? AND id IN ?", userId, ids).Delete(&Asset{}).Error
+}
+
 // ===== 管理端 =====
 
 // GetAssetsAdmin 管理端列表；trashed: "" 全部 / "1" 正常 / "2" 回收站。

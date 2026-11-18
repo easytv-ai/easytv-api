@@ -192,6 +192,71 @@ func DeleteMyAsset(c *gin.Context) {
 	common.ApiSuccess(c, nil)
 }
 
+const assetTrashBatchLimit = 100
+
+// normalizeAssetIds 去掉非法和重复的 id，保持原顺序。
+func normalizeAssetIds(ids []int) []int {
+	seen := make(map[int]struct{}, len(ids))
+	out := make([]int, 0, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
+}
+
+// TrashMyAssets 多选进回收站（POST /user/asset/delete { ids, force }）。
+// 没被引用的直接软删；正在使用的整批放进 in_use，不删。确认后带 force 再删那几条。
+func TrashMyAssets(c *gin.Context) {
+	var req struct {
+		Ids   []int `json:"ids"`
+		Force bool  `json:"force"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ApiErrorMsg(c, "无效的参数")
+		return
+	}
+	ids := normalizeAssetIds(req.Ids)
+	if len(ids) == 0 {
+		common.ApiErrorMsg(c, "请选择要删除的素材")
+		return
+	}
+	if len(ids) > assetTrashBatchLimit {
+		common.ApiErrorMsg(c, "一次最多删除 100 条素材")
+		return
+	}
+	userId := c.GetInt("id")
+	owned := model.GetUserAssetsByIds(userId, ids)
+	missing := []int{}
+	free := []int{}
+	inUse := []gin.H{}
+	for _, id := range ids {
+		asset, ok := owned[id]
+		if !ok {
+			missing = append(missing, id)
+			continue
+		}
+		if !req.Force {
+			if refs := service.FindAssetRefs(userId, id); len(refs) > 0 {
+				inUse = append(inUse, gin.H{"id": asset.Id, "name": asset.Name, "refs": refs})
+				continue
+			}
+		}
+		free = append(free, asset.Id)
+	}
+	if err := model.DeleteUserAssets(userId, free); err != nil {
+		respondModelError(c, err, "删除失败")
+		return
+	}
+	common.ApiSuccess(c, gin.H{"trashed": free, "in_use": inUse, "missing": missing})
+}
+
 // GetMyTrashAssets 资产回收站（GET /user/asset/trash）。
 func GetMyTrashAssets(c *gin.Context) {
 	list, total, err := model.GetUserTrashAssets(c.GetInt("id"), parsePageInfo(c))
