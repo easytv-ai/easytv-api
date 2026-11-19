@@ -1714,7 +1714,7 @@ AI 动作按「能力位」接模型（运营配了模型即上线，没配就�
 | 表 | 字段 | 说明 |
 |---|---|---|
 | `media_job` | `id, user_id, team_id, engine, action, source_asset_id, task_id, node_id, canvas_id, project_id, params text, outputs text, status, progress, output_asset_id, output_url, error, created_at, started_at, finished_at` | 媒体工具作业。`engine`：`local` 本地 ffmpeg / `model` 走生成任务；`status`：`0` 排队 / `1` 处理中 / `2` 成功 / `-1` 失败；`outputs` 为 `[{asset_id,url,type,name,label,task_id?,time?,width?,height?,text?,cues?,warning?,warning_code?,warning_params?}]`（`width/height` 为图片 / 视频产物像素尺寸，2026-09-24 起下发；`text` / `cues[{start,end,text}]` 为语音转字幕的 SRT 与逐句时间轴，`warning` 为给人看的中文保留说明，`warning_code` / `warning_params` 给前端拼 i18n，见 35） |
-| `model_price` 新增 | `abilities varchar(255) default ''` | 能力标签，逗号分隔：`upscale / remove_subtitle / vocal_separation / bgm_separation / matting / subject_remove / subject_modify / subject_replace / motion_capture / native_audio`（`native_audio`=视频模型能按提示词里的台词原生出声，口播预设只列这类模型；按名推断 sora / veo-3 / seedance-2 / wan2.6+ / Kling 2.6+、3.0、O1、Omni；`video_reference`=视频模型能接收 `reference_video` 素材，全能参考 / 爆款复刻只列这类模型，按名推断 seedance-2 / wan r2v 系列；Kling 全系（含 O1、Omni）经本网关带参考视频必败，不在其列，sora / hailuo / veo 与 wan t2v 同理，见 29）。空串按模型名推断（`*upscale*` / `*超分*` / `*subtitle*` / `*demucs*` / `*vocal*` / `*matting*` / `*mocap*` 等）；管理端非法值被丢弃而不是报错 |
+| `model_price` 新增 | `abilities varchar(255) default ''` | 能力标签，逗号分隔：`upscale / remove_subtitle / vocal_separation / bgm_separation / matting / subject_remove / subject_modify / subject_replace / motion_capture / native_audio`（`native_audio`=视频模型能按提示词里的台词原生出声，口播预设只列这类模型；按名推断 sora / veo-3 / seedance-2 / wan2.6+ / Kling 2.6+、3.0、O1、Omni；`video_reference`=视频模型能接收 `reference_video` 素材，全能参考 / 爆款复刻 / 视频延长只列这类模型；以网关 `input_references.items.properties.role` 的枚举为准（列了 `reference_video` 才算），网关没给这张表时才按名推断 seedance-2 / wan r2v 系列；Kling 全系（含 O1、Omni）的 role 只有图片，经本网关带参考视频必败，sora / hailuo / veo 与 wan t2v 同理，见 29）。空串按模型名推断（`*upscale*` / `*超分*` / `*subtitle*` / `*demucs*` / `*vocal*` / `*matting*` / `*mocap*` 等）；管理端非法值被丢弃而不是报错 |
 
 资产新增来源 `source=media`（本地处理产物）。
 
@@ -2125,7 +2125,9 @@ POST /user/media/jobs
 | POST | `/admin/model-price/:id/sync-gateway` | root。`force=1` 覆盖已有值（缺省只填空字段）。返回 `{ price, result: { id, model, changes[], notes[]?, skipped?, error? } }` |
 | POST | `/admin/model-price/sync-gateway` | root。全部定价行逐个同步，返回 `{ results[], updated, skipped, failed }` |
 
-翻译规则（`providers.ParseGatewayParams`）：`duration` 的 `enum` → `durations`，没有 enum 用 `min~max` 展开整数档（超过 16 档视为连续值不展开）；`resolution.enum` → `resolutions`；有 `generate_audio` / `audio` 属性 → 加 `native_audio`；输入类型里的 `video` **不**同步成 `video_reference`（2026-09-18 实测 Kling 3.0 Omni 声明了 video 输入，但网关只走上游图片参考字段，带参考视频报 `Image format is invalid`）；`aspect_ratio.enum` 目前没有对应列，只在 `notes` 里回显，不算改动。能力位只增不减。网关没给结构化参数、或网关详情 404（该模型对本令牌不可见，如 gpt-image / gemini / sora 系）的模型返回 `skipped`，不报错；其它网关错误才计入 `failed`。
+翻译规则（`providers.ParseGatewayParams`）：`duration` 的 `enum` → `durations`，没有 enum 用 `min~max` 展开整数档（超过 16 档视为连续值不展开）；`resolution.enum` → `resolutions`；有 `generate_audio` / `audio` 属性 → 加 `native_audio`；`input_references.items.properties.role`（或 `.type`）的枚举里有 `reference_video`（或 `video`）才同步成 `video_reference`，没有就摘掉——上游 `input` 里写 `video` 不算数，2026-09-18 实测 Kling 3.0 Omni 声明了 video 输入但 role 只有 `first_frame / last_frame / reference_image`，带参考视频报 `Image format is invalid`；`aspect_ratio.enum` 目前没有对应列，只在 `notes` 里回显，不算改动。除 `video_reference` 外能力位只增不减。网关没给结构化参数、或网关详情 404（该模型对本令牌不可见，如 gpt-image / gemini / sora 系）的模型返回 `skipped`，不报错；其它网关错误才计入 `failed`。
+
+`GET /generation/models` 的 `abilities` 也按同一份 role 枚举定 `video_reference`（图标与这份结论共用一次详情请求，缓存 30 分钟）；网关没给 `input_references` 表时才回退按名推断，不会把 wan3.0-video 这类新模型漏在参考视频清单外。
 
 ## 29. 爆款复刻（2026-09-17）
 

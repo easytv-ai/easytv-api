@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"easytv-api/common"
+	"easytv-api/model"
 	"easytv-api/setting"
 )
 
@@ -193,35 +194,76 @@ func iconFromDetail(detail *GatewayModelDetail) string {
 	return ""
 }
 
-// 图标很少变，而且只给列表展示。成功（含「这个模型没有图标」）缓存久一点，
+// ModelFacts 列表接口要的一次性结论：展示图标 + 网关这条通道能不能收参考视频。
+type ModelFacts struct {
+	Icon string
+	// VideoReference 能收 reference_video；VideoReferenceKnown=false 时网关没给输入素材表，
+	// 调用方回退到按模型名推断（见 model.InferAbilities）。
+	VideoReference      bool
+	VideoReferenceKnown bool
+}
+
+func factsFromDetail(detail *GatewayModelDetail) ModelFacts {
+	facts := ModelFacts{Icon: iconFromDetail(detail)}
+	if detail == nil {
+		return facts
+	}
+	fields, _ := ParseGatewayParams(detail.Params)
+	facts.VideoReference = fields.VideoReference
+	facts.VideoReferenceKnown = fields.VideoReferenceKnown
+	return facts
+}
+
+// WithVideoReference 按网关给的结论调整能力清单：能收就补上 video_reference，不能收就摘掉。
+// 列表接口用它覆盖按名推断的结果（Kling 的 role 枚举只有图片，正好被摘掉；wan3.0 被补上）。
+func WithVideoReference(abilities any, supported bool) []string {
+	out := []string{}
+	switch list := abilities.(type) {
+	case []string:
+		for _, a := range list {
+			if a != model.AbilityVideoReference {
+				out = append(out, a)
+			}
+		}
+	case nil:
+	default:
+		return out
+	}
+	if supported {
+		out = append(out, model.AbilityVideoReference)
+	}
+	return out
+}
+
+// 图标和参考视频能力都来自同一次详情请求，一起缓存。成功（含「这个模型没有图标」）缓存久一点，
 // 失败只挡一小会儿，免得网关抖一下就把图标空掉半小时。
 const modelIconCacheTTL = 30 * time.Minute
 const modelIconCacheErrTTL = 30 * time.Second
 
-type modelIconEntry struct {
-	icon    string
+type modelFactsEntry struct {
+	facts   ModelFacts
 	expires time.Time
 }
 
-type modelIconCall struct {
-	done chan struct{}
-	icon string
+type modelFactsCall struct {
+	done  chan struct{}
+	facts ModelFacts
 }
 
-var modelIconState = struct {
+var modelFactsState = struct {
 	mu       sync.Mutex
-	items    map[string]modelIconEntry
-	inflight map[string]*modelIconCall
+	items    map[string]modelFactsEntry
+	inflight map[string]*modelFactsCall
 }{
-	items:    map[string]modelIconEntry{},
-	inflight: map[string]*modelIconCall{},
+	items:    map[string]modelFactsEntry{},
+	inflight: map[string]*modelFactsCall{},
 }
 
-// ModelIcons 给 GET /generation/models 用：按模型返回 Lobe 图标名。
-// 网关列表（/pricing）没有图标，图标只在 /pricing/detail。这里按模型缓存，
-// 同一个名字并发只打一次网关，打开模型菜单不必再由浏览器逐个打详情。
-func ModelIcons(names []string) map[string]string {
-	out := make(map[string]string, len(names))
+// ModelFactsOf 给 GET /generation/models 用：按模型返回图标，以及网关这条通道能不能收参考视频。
+// 网关列表（/pricing）没有这些，只在 /pricing/detail。这里按模型缓存，同一个名字并发只打一次网关，
+// 模型菜单不必再由浏览器逐个打详情。
+func ModelFactsOf(names []string) map[string]ModelFacts {
+	out := make(map[string]ModelFacts, len(names))
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, 8)
@@ -240,9 +282,9 @@ func ModelIcons(names []string) map[string]string {
 		go func(name string) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			icon := loadModelIcon(name)
+			facts := loadModelFacts(name)
 			mu.Lock()
-			out[name] = icon
+			out[name] = facts
 			mu.Unlock()
 		}(name)
 	}
@@ -250,36 +292,36 @@ func ModelIcons(names []string) map[string]string {
 	return out
 }
 
-func loadModelIcon(name string) string {
-	modelIconState.mu.Lock()
-	if entry, ok := modelIconState.items[name]; ok && time.Now().Before(entry.expires) {
-		modelIconState.mu.Unlock()
-		return entry.icon
+func loadModelFacts(name string) ModelFacts {
+	modelFactsState.mu.Lock()
+	if entry, ok := modelFactsState.items[name]; ok && time.Now().Before(entry.expires) {
+		modelFactsState.mu.Unlock()
+		return entry.facts
 	}
-	if call, ok := modelIconState.inflight[name]; ok {
-		modelIconState.mu.Unlock()
+	if call, ok := modelFactsState.inflight[name]; ok {
+		modelFactsState.mu.Unlock()
 		<-call.done
-		return call.icon
+		return call.facts
 	}
-	call := &modelIconCall{done: make(chan struct{})}
-	modelIconState.inflight[name] = call
-	modelIconState.mu.Unlock()
+	call := &modelFactsCall{done: make(chan struct{})}
+	modelFactsState.inflight[name] = call
+	modelFactsState.mu.Unlock()
 
 	detail, err := FetchGatewayModelDetail(name, "")
-	icon := ""
+	facts := ModelFacts{}
 	ttl := modelIconCacheErrTTL
 	if err == nil {
-		icon = iconFromDetail(detail)
+		facts = factsFromDetail(detail)
 		ttl = modelIconCacheTTL
 	}
 
-	modelIconState.mu.Lock()
-	modelIconState.items[name] = modelIconEntry{icon: icon, expires: time.Now().Add(ttl)}
-	delete(modelIconState.inflight, name)
-	call.icon = icon
+	modelFactsState.mu.Lock()
+	modelFactsState.items[name] = modelFactsEntry{facts: facts, expires: time.Now().Add(ttl)}
+	delete(modelFactsState.inflight, name)
+	call.facts = facts
 	close(call.done)
-	modelIconState.mu.Unlock()
-	return icon
+	modelFactsState.mu.Unlock()
+	return facts
 }
 
 func gatewayDetailCachePut(key string, detail *GatewayModelDetail, err error) {

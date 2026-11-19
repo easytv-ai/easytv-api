@@ -82,15 +82,16 @@ func GetGenerationModels(c *gin.Context) {
 	for _, m := range models {
 		names = append(names, m.Model)
 	}
-	icons := providers.ModelIcons(names)
+	icons := providers.ModelFactsOf(names)
 	items := make([]gin.H, 0, len(models))
 	for _, m := range models {
+		facts := icons[m.Model]
 		item := gin.H{
 			"provider":               m.Provider,
 			"model":                  m.Model,
 			"type":                   m.Type,
 			"label":                  m.Label,
-			"icon":                   icons[m.Model],
+			"icon":                   facts.Icon,
 			"unit":                   "",
 			"points_per_unit":        0,
 			"member_points_per_unit": 0,
@@ -115,7 +116,7 @@ func GetGenerationModels(c *gin.Context) {
 		if m.Type == model.TaskTypeImage {
 			item["image_input"] = model.InferImageInput(m.Model)
 		}
-		item["abilities"] = model.InferAbilities(m.Model)
+		abilities := model.InferAbilities(m.Model)
 		// 最近 7 天健康（API.md 37）：样本够且失败率过高时 recent_warn=true，创作台给一句提醒
 		item["recent_total"], item["recent_fail_rate"], item["recent_warn"] = 0, 0.0, false
 		if h := health[m.Model]; h != nil {
@@ -152,8 +153,14 @@ func GetGenerationModels(c *gin.Context) {
 			if m.Type == model.TaskTypeImage {
 				item["image_input"] = p.EffectiveImageInput()
 			}
-			item["abilities"] = p.EffectiveAbilities()
+			abilities = p.EffectiveAbilities()
 		}
+		// 参考视频以网关这条通道的 role 枚举为准（API.md 28.3）：网关说有就补上，说没有就摘掉。
+		// 按名推断只在该模型没给输入素材表时才用，免得把 wan3.0 这类新模型漏掉、或把 Kling 这类误放进来。
+		if facts.VideoReferenceKnown {
+			abilities = providers.WithVideoReference(abilities, facts.VideoReference)
+		}
+		item["abilities"] = abilities
 		items = append(items, item)
 	}
 	common.ApiSuccess(c, items)

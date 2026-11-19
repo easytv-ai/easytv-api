@@ -27,18 +27,24 @@ const gatewaySyncMaxDurationTiers = 16
 type GatewaySyncFields struct {
 	Durations   []int
 	Resolutions []string
-	// Abilities 能推断出的能力位：有 generate_audio → native_audio（输入类型里的 video 不可信，见 ParseGatewayParams）
+	// Abilities 能推断出的能力位：有 generate_audio → native_audio、能收参考视频 → video_reference
 	Abilities []string
 	// AspectRatios 目前 model_price 没有对应列，只在 changes 里回显给运营看
 	AspectRatios []string
+	// VideoReference 网关这条通道能不能收 reference_video，取自 input_references 的 role 枚举
+	VideoReference bool
+	// VideoReferenceKnown 网关给了输入素材表、能对参考视频下结论；false 时调用方回退到按名推断
+	VideoReferenceKnown bool
 }
 
 type gatewayParamProperty struct {
-	Type    string            `json:"type"`
-	Enum    []json.RawMessage `json:"enum"`
-	Min     json.RawMessage   `json:"min"`
-	Max     json.RawMessage   `json:"max"`
-	Default json.RawMessage   `json:"default"`
+	Type       string                          `json:"type"`
+	Enum       []json.RawMessage               `json:"enum"`
+	Min        json.RawMessage                 `json:"min"`
+	Max        json.RawMessage                 `json:"max"`
+	Default    json.RawMessage                 `json:"default"`
+	Items      *gatewayParamProperty           `json:"items"`
+	Properties map[string]gatewayParamProperty `json:"properties"`
 }
 
 type gatewayParamCategory struct {
@@ -80,9 +86,17 @@ func ParseGatewayParams(params json.RawMessage) (fields GatewaySyncFields, ok bo
 	sort.Strings(names)
 	for _, name := range names {
 		cat := cats[name]
-		// 注意：cat.Input 里带 "video" 不能当成「能吃参考视频」。2026-09-18 实测 Kling 3.0 Omni 声明了 video 输入，
-		// 但网关只把素材送进上游的图片参考字段，带参考视频必败（Image format is invalid）。video_reference 只靠
-		// 模型名推断或运营手动勾，不从网关参数表同步。
+		// 输入素材表里的 role 枚举是网关这条通道的真实口径：列了 reference_video 才收参考视频。
+		// 上游 input 里写 "video" 不算数——Kling 3.0 Omni 声明了 video 输入，但 role 只有
+		// first_frame / last_frame / reference_image，带参考视频必败（Image format is invalid），见 API.md 28.3。
+		if ref, known := videoReferenceSupport(cat); known {
+			fields.VideoReference = ref
+			fields.VideoReferenceKnown = true
+			if ref {
+				fields.Abilities = appendUnique(fields.Abilities, model.AbilityVideoReference)
+				ok = true
+			}
+		}
 		for key, prop := range cat.Properties {
 			switch strings.ToLower(key) {
 			case "duration":
@@ -130,6 +144,33 @@ func enumStrings(prop gatewayParamProperty) []string {
 		out = append(out, v)
 	}
 	return out
+}
+
+// videoReferenceSupport 从输入素材表判断这条通道能不能收参考视频。
+// role 枚举（或 type 枚举）里出现 reference_video / video 才算；网关没给输入素材表时 known=false，
+// 调用方回退到按模型名推断。
+func videoReferenceSupport(cat gatewayParamCategory) (ref bool, known bool) {
+	prop, ok := cat.Properties["input_references"]
+	if !ok || prop.Items == nil {
+		return false, false
+	}
+	roles := enumStrings(prop.Items.Properties["role"])
+	types := enumStrings(prop.Items.Properties["type"])
+	if len(roles) == 0 && len(types) == 0 {
+		return false, false
+	}
+	for _, v := range roles {
+		if strings.EqualFold(v, "reference_video") {
+			return true, true
+		}
+	}
+	// 有的模型把视频素材写在 type 里；Kling 的 type 只写 image，正好排除
+	for _, v := range types {
+		if strings.EqualFold(v, "video") {
+			return true, true
+		}
+	}
+	return false, true
 }
 
 // durationsFromProperty enum 优先；否则 min~max 整数展开（最多 gatewaySyncMaxDurationTiers 档，再多不展开）。

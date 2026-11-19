@@ -22,22 +22,55 @@ func TestIconFromDetail(t *testing.T) {
 	}
 }
 
-func TestModelIconsUsesCache(t *testing.T) {
+func TestModelFactsUsesCache(t *testing.T) {
 	const name = "seedance-2.0-icon-cache"
-	modelIconState.mu.Lock()
-	modelIconState.items[name] = modelIconEntry{icon: "ByteDance.Color", expires: time.Now().Add(time.Minute)}
-	modelIconState.mu.Unlock()
+	modelFactsState.mu.Lock()
+	modelFactsState.items[name] = modelFactsEntry{
+		facts:   ModelFacts{Icon: "ByteDance.Color", VideoReference: true, VideoReferenceKnown: true},
+		expires: time.Now().Add(time.Minute),
+	}
+	modelFactsState.mu.Unlock()
 	t.Cleanup(func() {
-		modelIconState.mu.Lock()
-		delete(modelIconState.items, name)
-		modelIconState.mu.Unlock()
+		modelFactsState.mu.Lock()
+		delete(modelFactsState.items, name)
+		modelFactsState.mu.Unlock()
 	})
 
-	got := ModelIcons([]string{name, name, "  "})
-	if got[name] != "ByteDance.Color" {
-		t.Fatalf("cached icon = %q", got[name])
+	got := ModelFactsOf([]string{name, name, "  "})
+	if got[name].Icon != "ByteDance.Color" {
+		t.Fatalf("cached icon = %q", got[name].Icon)
+	}
+	if !got[name].VideoReference || !got[name].VideoReferenceKnown {
+		t.Fatalf("cached video reference = %+v", got[name])
 	}
 	if _, ok := got[""]; ok {
 		t.Fatal("blank name should be skipped")
+	}
+}
+
+func TestWithVideoReference(t *testing.T) {
+	cases := []struct {
+		name      string
+		in        any
+		supported bool
+		want      string
+	}{
+		{"网关能收就补上", []string{"native_audio"}, true, "native_audio,video_reference"},
+		{"网关不能收就摘掉", []string{"native_audio", "video_reference"}, false, "native_audio"},
+		{"本来就有的不重复", []string{"video_reference"}, true, "video_reference"},
+		{"nil 清单", nil, true, "video_reference"},
+	}
+	for _, c := range cases {
+		got := WithVideoReference(c.in, c.supported)
+		joined := ""
+		for i, v := range got {
+			if i > 0 {
+				joined += ","
+			}
+			joined += v
+		}
+		if joined != c.want {
+			t.Errorf("%s：got %q want %q", c.name, joined, c.want)
+		}
 	}
 }
