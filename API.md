@@ -2077,6 +2077,8 @@ POST /user/media/jobs
 
 `GET /generation/models` 只给选择器要的字段；模型详情页与参数表单要的说明文案、供应商、参数属性表、端点定义来自网关的 `GET /pricing/detail`，由本服务转发后与本地积分定价合成一份 EasyTV 口径的响应。
 
+选择器图标也在列表上：每行带 `icon`（Lobe 图标名，模型自己的优先，没有就用供应商的；都没有为空串）。网关的 `/pricing` 列表没有图标，服务端按模型从详情取一次并缓存 30 分钟，打开模型菜单不必再逐个打 `/generation/models/detail`。
+
 ### 28.1 接口
 
 | 方法 | 路径 | 说明 |

@@ -404,10 +404,7 @@ func fillMediaActionView(a MediaAction, disabled map[string]bool, prices []*mode
 			}
 			return v, priced, MediaGapNoModel
 		}
-		if a.Action == "transcribe" && !ffmpeg {
-			v.Available, v.Reason = false, "服务器未安装 ffmpeg"
-			return v, priced, MediaGapNoFFmpeg
-		}
+		// 转写的抽音轨在浏览器里做完再上传，不因为服务器没装 ffmpeg 就把入口关掉。
 	case a.Engine == model.MediaEnginePipeline:
 		priced = videoPricedModelNames(prices)
 		v.Models = videoModelNames(prices)

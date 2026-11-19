@@ -179,6 +179,109 @@ func gatewayDetailCacheGet(key string) (*GatewayModelDetail, error, bool) {
 	return item.detail, item.err, true
 }
 
+// iconFromDetail 选择器只用一个图标名：模型自己的优先，没有就用供应商的。
+func iconFromDetail(detail *GatewayModelDetail) string {
+	if detail == nil {
+		return ""
+	}
+	if icon := strings.TrimSpace(detail.Icon); icon != "" {
+		return icon
+	}
+	if detail.Vendor != nil {
+		return strings.TrimSpace(detail.Vendor.Icon)
+	}
+	return ""
+}
+
+// 图标很少变，而且只给列表展示。成功（含「这个模型没有图标」）缓存久一点，
+// 失败只挡一小会儿，免得网关抖一下就把图标空掉半小时。
+const modelIconCacheTTL = 30 * time.Minute
+const modelIconCacheErrTTL = 30 * time.Second
+
+type modelIconEntry struct {
+	icon    string
+	expires time.Time
+}
+
+type modelIconCall struct {
+	done chan struct{}
+	icon string
+}
+
+var modelIconState = struct {
+	mu       sync.Mutex
+	items    map[string]modelIconEntry
+	inflight map[string]*modelIconCall
+}{
+	items:    map[string]modelIconEntry{},
+	inflight: map[string]*modelIconCall{},
+}
+
+// ModelIcons 给 GET /generation/models 用：按模型返回 Lobe 图标名。
+// 网关列表（/pricing）没有图标，图标只在 /pricing/detail。这里按模型缓存，
+// 同一个名字并发只打一次网关，打开模型菜单不必再由浏览器逐个打详情。
+func ModelIcons(names []string) map[string]string {
+	out := make(map[string]string, len(names))
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, 8)
+	seen := map[string]struct{}{}
+	for _, name := range names {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+		if _, ok := seen[name]; ok {
+			continue
+		}
+		seen[name] = struct{}{}
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(name string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+			icon := loadModelIcon(name)
+			mu.Lock()
+			out[name] = icon
+			mu.Unlock()
+		}(name)
+	}
+	wg.Wait()
+	return out
+}
+
+func loadModelIcon(name string) string {
+	modelIconState.mu.Lock()
+	if entry, ok := modelIconState.items[name]; ok && time.Now().Before(entry.expires) {
+		modelIconState.mu.Unlock()
+		return entry.icon
+	}
+	if call, ok := modelIconState.inflight[name]; ok {
+		modelIconState.mu.Unlock()
+		<-call.done
+		return call.icon
+	}
+	call := &modelIconCall{done: make(chan struct{})}
+	modelIconState.inflight[name] = call
+	modelIconState.mu.Unlock()
+
+	detail, err := FetchGatewayModelDetail(name, "")
+	icon := ""
+	ttl := modelIconCacheErrTTL
+	if err == nil {
+		icon = iconFromDetail(detail)
+		ttl = modelIconCacheTTL
+	}
+
+	modelIconState.mu.Lock()
+	modelIconState.items[name] = modelIconEntry{icon: icon, expires: time.Now().Add(ttl)}
+	delete(modelIconState.inflight, name)
+	call.icon = icon
+	close(call.done)
+	modelIconState.mu.Unlock()
+	return icon
+}
+
 func gatewayDetailCachePut(key string, detail *GatewayModelDetail, err error) {
 	ttl := gatewayDetailCacheTtl
 	if err != nil {

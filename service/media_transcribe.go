@@ -71,11 +71,16 @@ type transcribeSpec struct {
 	Diarize  bool    `json:"diarize"`
 	Duration float64 `json:"duration"` // 预扣时按的源时长（秒）
 	Frozen   int     `json:"frozen"`   // 预扣积分
+	Prepared bool    `json:"prepared"` // 浏览器已经抽好 16k 音轨，worker 不再用服务器 ffmpeg
 }
 
 // createTranscribeJob 语音转字幕：挑模型 → 校验 → 建 running 任务预扣 → 落 pipeline 壳等 worker。
 func createTranscribeJob(job *model.MediaJob, action *MediaAction, src *model.Asset, req MediaJobRequest) (*model.MediaJob, error) {
-	if !FFmpegAvailable() {
+	prepared := mediaParamBool(req.Params, "prepared", false)
+	if prepared && src.Type != model.AssetTypeAudio {
+		return nil, errors.New("请先抽出音轨再转写")
+	}
+	if !prepared && !FFmpegAvailable() {
 		return nil, errors.New("服务器未安装 ffmpeg，暂不能转写")
 	}
 	if DefaultStorage == nil {
@@ -116,7 +121,7 @@ func createTranscribeJob(job *model.MediaJob, action *MediaAction, src *model.As
 		language = "auto"
 	}
 	spec := transcribeSpec{
-		Model: modelName, Language: language,
+		Model: modelName, Language: language, Prepared: prepared,
 		Diarize: mediaParamBool(req.Params, "diarize", false) && strings.Contains(strings.ToLower(modelName), "diarize"),
 	}
 
@@ -141,8 +146,17 @@ func createTranscribeJob(job *model.MediaJob, action *MediaAction, src *model.As
 		return nil, fmt.Errorf("处理任务排队中，前面还有 %d 个任务，请稍后再试", n)
 	}
 
-	// 预扣按源时长（封顶 20 分钟，转写也只送前 20 分钟）
-	spec.Duration = transcribeBillableSeconds(src)
+	// 预扣按源时长（封顶 20 分钟，转写也只送前 20 分钟）。
+	// 浏览器抽好的音轨带上时长，避免没装 ffmpeg 时再去探文件。
+	if prepared {
+		if d := mediaParamFloat(req.Params, "duration", 0); d > 0 {
+			spec.Duration = math.Min(d, transcribeMaxSeconds)
+		} else {
+			spec.Duration = transcribeDefaultSeconds
+		}
+	} else {
+		spec.Duration = transcribeBillableSeconds(src)
+	}
 	taskParams := map[string]any{"transcribe": true, "count": 1, "duration": int(math.Ceil(spec.Duration)), "language": language}
 	paramsJSON, _ := json.Marshal(taskParams)
 	isMember := IsMemberForPricing(job.UserId, job.TeamId)
@@ -262,16 +276,29 @@ func runTranscribeJob(j *model.MediaJob) {
 		failTranscribe(j, "读取源素材失败："+err.Error())
 		return
 	}
-	fillAssetMediaInfoFromFile(ctx, src, srcPath)
-	total, _, _, hasAudio := ProbeMediaInfo(ctx, srcPath)
-	if !hasAudio {
-		failTranscribe(j, "这段素材没有音轨")
-		return
-	}
-	audioPath, sent, err := transcribeAudioTrack(ctx, dir, srcPath, total)
-	if err != nil {
-		failTranscribe(j, "抽取音轨失败："+err.Error())
-		return
+	var audioPath string
+	var sent float64
+	var total float64
+	if spec.Prepared {
+		audioPath = srcPath
+		sent = spec.Duration
+		if sent <= 0 {
+			sent = transcribeDefaultSeconds
+		}
+		total = sent
+	} else {
+		fillAssetMediaInfoFromFile(ctx, src, srcPath)
+		var hasAudio bool
+		total, _, _, hasAudio = ProbeMediaInfo(ctx, srcPath)
+		if !hasAudio {
+			failTranscribe(j, "这段素材没有音轨")
+			return
+		}
+		audioPath, sent, err = transcribeAudioTrack(ctx, dir, srcPath, total)
+		if err != nil {
+			failTranscribe(j, "抽取音轨失败："+err.Error())
+			return
+		}
 	}
 	setMediaProgress(j, 40)
 

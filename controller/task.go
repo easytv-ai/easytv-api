@@ -10,6 +10,7 @@ import (
 	"easytv-api/common"
 	"easytv-api/model"
 	"easytv-api/service"
+	"easytv-api/service/providers"
 	"easytv-api/setting"
 
 	"github.com/gin-gonic/gin"
@@ -77,6 +78,11 @@ func GetGenerationModels(c *gin.Context) {
 	}
 	health := service.CachedModelHealth()
 	keep := service.CachedModelKeep()
+	names := make([]string, 0, len(models))
+	for _, m := range models {
+		names = append(names, m.Model)
+	}
+	icons := providers.ModelIcons(names)
 	items := make([]gin.H, 0, len(models))
 	for _, m := range models {
 		item := gin.H{
@@ -84,6 +90,7 @@ func GetGenerationModels(c *gin.Context) {
 			"model":                  m.Model,
 			"type":                   m.Type,
 			"label":                  m.Label,
+			"icon":                   icons[m.Model],
 			"unit":                   "",
 			"points_per_unit":        0,
 			"member_points_per_unit": 0,
