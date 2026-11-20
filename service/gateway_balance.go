@@ -14,7 +14,7 @@ import (
 )
 
 // 网关余额（API.md 38）：seedance 曾因网关账户欠费（402「余额 $-0.81」）成批失败，没人知道。
-// 网关是 one-api 一系，sk 令牌可查 OpenAI 兼容的账单接口；这里缓存 5 分钟给定价页展示，
+// 网关的 sk 令牌可查 OpenAI 兼容的账单接口；这里缓存 5 分钟给定价页展示，
 // 后台每 6 小时巡检一次，低于阈值给管理员发 system 通知，24 小时内不重复。
 
 type GatewayBalance struct {

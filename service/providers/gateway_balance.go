@@ -14,7 +14,7 @@ import (
 	"easytv-api/setting"
 )
 
-// 网关余额（API.md 38）。网关是 one-api 一系，两条路：
+// 网关余额（API.md 38）。网关提供 OpenAI 兼容的账单接口，两条路：
 //   - 账户：GET {控制台}/api/user/self，头 Authorization: Bearer <系统访问令牌> + EasyAPI-User: <用户 id>，
 //     data.quota = 剩余、data.used_quota = 累计用量（quota 单位，500000 = $1）。这是会欠费的那个数。
 //   - 令牌：GET /v1/dashboard/billing/subscription（hard_limit_usd）+ /billing/usage（total_usage 美分）。
@@ -23,7 +23,7 @@ import (
 
 const gatewayQuotaPerUSD = 500000
 
-// gatewayUnlimitedSentinel one-api 对不限额令牌回的占位额度
+// gatewayUnlimitedSentinel 网关对不限额令牌回的占位额度
 const gatewayUnlimitedSentinel = 1e8
 
 func init() {

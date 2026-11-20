@@ -2713,7 +2713,7 @@ LibTV 的 L18 是「传 5–20 张图训练专属风格模板」；我们没有�
 
 ## 38. 网关余额巡检（2026-09-28）
 
-seedance 曾因网关账户欠费（402「预估扣费 $0.61，当前余额 $-0.81」）成批失败，没有任何地方能看到余额。网关是 one-api 一系，两条路：
+seedance 曾因网关账户欠费（402「预估扣费 $0.61，当前余额 $-0.81」）成批失败，没有任何地方能看到余额。网关提供 OpenAI 兼容的账单接口，两条路：
 
 - **账户余额**（会欠费的那个数）：`GET {控制台地址}/api/user/self`，头 `Authorization: Bearer <系统访问令牌>` + `EasyAPI-User: <网关用户 id>`；`data.quota` 剩余、`data.used_quota` 累计用量（quota 单位，500000 = $1，可为负）。令牌与用户 id 在管理端「系统设置 · 网关」填（setting `EasyAPIGatewayAccessToken` / `EasyAPIGatewayUserId`，令牌脱敏不回显）；控制台地址用 `EasyAPIGatewayPricingBaseUrl`（缺省网关地址）。
 - **sk 令牌额度**（没配访问令牌时的退路）：`GET /v1/dashboard/billing/subscription`（`hard_limit_usd` = 剩余 + 已用的总额度）与 `/billing/usage`（`total_usage` 美分）；剩余 = 总额度 − 已用。**sk 令牌不限额时 `hard_limit_usd` 固定回 100000000**（实测本站就是），只能报 `unlimited=true`，看不到账户余额——所以线上要配访问令牌。
