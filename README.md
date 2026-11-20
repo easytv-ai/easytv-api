@@ -18,8 +18,8 @@
 
 EasyTV turns a one-line idea into a finished short drama: script, storyboard,
 image and video generation, voice, subtitles and final compose, all on a
-node-based canvas. Think of it as the **New API of short-drama creation** — a
-self-hostable platform that plugs into any New API-compatible model gateway.
+node-based canvas. It is a self-hostable platform that plugs into any
+OpenAI-compatible model gateway.
 
 This repository is the Go backend. The creator studio lives in
 [`easytv-web`](https://github.com/easytv-ai/easytv-web) and the admin console in
@@ -33,7 +33,7 @@ This repository is the Go backend. The creator studio lives in
 - **AI agent** — screenplay planning, storyboard review, one-sentence-to-film
   pipeline with layered generation and automatic compose.
 - **Any model, one gateway** — text, image, video and audio models are called
-  through a New API-compatible gateway; pricing is managed per model in the
+  through an OpenAI-compatible gateway; pricing is managed per model in the
   admin console.
 - **Media tools** — trim, split, extract frames, separate audio and compose
   with subtitles / BGM / watermark, powered by `ffmpeg`.
@@ -54,7 +54,7 @@ easytv-web (Nuxt)  ─┐                      ┌─ MySQL 8  (GORM AutoMigrate
 easytv-manage (Nuxt)┘        │             ├─ Object storage (local / OSS / Qiniu)
                              │             └─ ffmpeg / ffprobe
                              ▼
-              New API-compatible model gateway (text · image · video · audio)
+              OpenAI-compatible model gateway (text · image · video · audio)
 ```
 
 Clients authenticate with a bearer token plus an `EasyTV-User` header; CORS
@@ -116,8 +116,7 @@ With the `full` profile running:
    `http://localhost:3006` and sign in as `admin` with the `ROOT_PASSWORD` from
    `.env`. The **Get started** card at the top of the dashboard walks you through
    three steps: enter your model gateway URL and key, fetch the model list, then
-   pick models and import pricing. Any gateway that speaks the New API protocol
-   works.
+   pick models and import pricing. Any OpenAI-compatible gateway works.
 2. **Sign in to the studio.** Open `http://localhost:3005`. The Chinese UI signs
    in with a phone number and SMS code; the English UI (language switch, top
    right) uses email. Without an SMS / SMTP provider configured, codes are not
@@ -286,7 +285,6 @@ conventions, [SECURITY.md](SECURITY.md) for reporting vulnerabilities,
 | [easytv-web](https://github.com/easytv-ai/easytv-web) | Creator studio: canvas, director stage, one-sentence-to-film |
 | [easytv-manage](https://github.com/easytv-ai/easytv-manage) | Admin console: users, works, moderation, billing, settings |
 | [easytv-website](https://github.com/easytv-ai/easytv-website) | Project website |
-| [New API](https://github.com/QuantumNous/new-api) | Model gateway this backend talks to; its architecture inspired ours |
 
 ## License
 
@@ -304,7 +302,6 @@ the subject. [简体中文译本](COMMERCIAL-LICENSE.zh-CN.md) is provided for
 convenience; the English text governs.
 
 Parts of the user, payment and object-storage modules follow the structure of
-[New API](https://github.com/QuantumNous/new-api) (itself derived from
-[One API](https://github.com/songquanpeng/one-api)), both AGPL-3.0. Keep this
-attribution when redistributing. A commercial license does **not** relicense
-those New API / One API derived parts.
+upstream open-source projects. They are listed, with their licenses, in
+[NOTICE](NOTICE). Keep that file when redistributing. A commercial license
+does **not** relicense those parts.

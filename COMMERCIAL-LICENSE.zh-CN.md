@@ -67,7 +67,7 @@ EasyTV 按 AGPL-3.0 开源。只要遵守 AGPL-3.0（含第 13 条网络 copylef
 
 本商业许可只覆盖许可方有权再许可的部分，**不能**改变第三方代码的原有许可证，至少包括：
 
-- 用户、支付与对象存储等模块的结构参考了 [New API](https://github.com/QuantumNous/new-api)（源自 [One API](https://github.com/songquanpeng/one-api)），二者同为 AGPL-3.0。这些部分仍受 AGPL-3.0 约束，商业订单**不能**改变其许可证。
+- 用户、支付与对象存储等模块的结构参考了 [NOTICE](NOTICE) 中列出的上游项目。这些部分仍受该文件所载协议约束，商业订单**不能**改变其许可证。
 - `go.mod` / `go.sum` 中的 Go 依赖
 
 被许可方须自行遵守这些许可证。

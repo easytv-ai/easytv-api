@@ -16,7 +16,7 @@
 
 </div>
 
-EasyTV 把一句话变成一部成片短剧：剧本、分镜、图像与视频生成、配音、字幕、合成，全部在节点画布上完成。可以把它理解为**短剧创作领域的 New API**：一套可自托管的平台，接任何兼容 New API 协议的模型网关。
+EasyTV 把一句话变成一部成片短剧：剧本、分镜、图像与视频生成、配音、字幕、合成，全部在节点画布上完成。这是一套可自托管的平台，接任何 OpenAI 兼容的模型网关。
 
 本仓库是 Go 后端。创作台在 [`easytv-web`](https://github.com/easytv-ai/easytv-web)，运营后台在 [`easytv-manage`](https://github.com/easytv-ai/easytv-manage)。
 
@@ -24,7 +24,7 @@ EasyTV 把一句话变成一部成片短剧：剧本、分镜、图像与视频�
 
 - **创作域** —— 项目、带版本历史与只读分享的画布、资产、生成任务、发布作品、技能（提示词模板）与提示词库。
 - **AI 智能体** —— 剧本策划、分镜审片、一句话成片（分层生成 + 自动合成）。
-- **任意模型，一个网关** —— 文本、图像、视频、音频模型统一经兼容 New API 的网关调用；每个模型的积分单价在后台维护。
+- **任意模型，一个网关** —— 文本、图像、视频、音频模型统一经 OpenAI 兼容网关调用；每个模型的积分单价在后台维护。
 - **媒体工具** —— 裁切、分割、抽帧、音画分离，以及带字幕 / BGM / 水印的合成，基于 `ffmpeg`。
 - **社区** —— 公开信息流、关注、点赞、评论、榜单、举报与审核队列。
 - **商业化** —— 会员计划、积分包、订单、微信支付与支付宝、发票、增长机制（邀请、签到、活动）、团队额度。
@@ -39,7 +39,7 @@ easytv-web (Nuxt)  ─┐                      ┌─ MySQL 8  (GORM AutoMigrate
 easytv-manage (Nuxt)┘        │             ├─ 对象存储 (本地 / OSS / 七牛)
                              │             └─ ffmpeg / ffprobe
                              ▼
-              兼容 New API 的模型网关（文本 · 图像 · 视频 · 音频）
+              OpenAI 兼容的模型网关（文本 · 图像 · 视频 · 音频）
 ```
 
 客户端以 Bearer Token 加 `EasyTV-User` 头鉴权；CORS 回显请求来源，创作台与后台可以部署在任意域名。所有运行期可变的配置都在 `setting` 表，由后台编辑。
@@ -85,7 +85,7 @@ go run . --port 8383
 
 用 `full` profile 起好之后：
 
-1. **进后台配模型**：打开运营后台 `http://localhost:3006`，用 `admin` 和 `.env` 里的 `ROOT_PASSWORD` 登录。首页顶部的「开始使用」会带你走三步：填模型网关的地址与 Key → 拉取模型 → 勾选并导入定价。网关用任何兼容 New API 协议的实例都可以。
+1. **进后台配模型**：打开运营后台 `http://localhost:3006`，用 `admin` 和 `.env` 里的 `ROOT_PASSWORD` 登录。首页顶部的「开始使用」会带你走三步：填模型网关的地址与 Key → 拉取模型 → 勾选并导入定价。任何 OpenAI 兼容网关都可以。
 2. **登录创作台**：打开 `http://localhost:3005`。中文界面用手机号 + 验证码登录；没有配置短信通道时验证码不会真发，而是打印在后端日志里：
 
    ```bash
@@ -230,7 +230,6 @@ tests/        HTTP 级冒烟测试（sqlmock）
 | [easytv-web](https://github.com/easytv-ai/easytv-web) | 创作台：画布、导演台、一句话成片 |
 | [easytv-manage](https://github.com/easytv-ai/easytv-manage) | 运营后台：用户、作品、审核、计费、设置 |
 | [easytv-website](https://github.com/easytv-ai/easytv-website) | 项目官网 |
-| [New API](https://github.com/QuantumNous/new-api) | 本后端对接的模型网关，其架构也是我们的参考 |
 
 ## 开源协议
 
@@ -245,4 +244,4 @@ EasyTV API 采用 **AGPL + 商业** 双许可：
 [leida@easyapi.com](mailto:leida@easyapi.com)，主题加 `[LICENSE] easytv-api`。
 [English terms](COMMERCIAL-LICENSE.md) 是准据文本。
 
-用户、支付与对象存储模块的结构参考了 [New API](https://github.com/QuantumNous/new-api)（源自 [One API](https://github.com/songquanpeng/one-api)），二者同为 AGPL-3.0。再分发时请保留此署名。商业许可**不能**改变这些源自 New API / One API 的部分。
+用户、支付与对象存储模块的结构参考了上游开源项目，项目名称与各自的协议见 [NOTICE](NOTICE)。再分发时请保留该文件。商业许可**不能**改变这些部分。

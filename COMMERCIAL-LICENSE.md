@@ -98,10 +98,9 @@ This commercial license covers only material whose copyright Licensor can
 grant. It does **not** relicense third-party code. Those parts stay under
 their original terms, including at least:
 
-- User, payment and object-storage modules whose structure follows
-  [New API](https://github.com/QuantumNous/new-api) (derived from
-  [One API](https://github.com/songquanpeng/one-api)), both AGPL-3.0.
-  Those parts stay AGPL-3.0; a commercial Order does **not** relicense them.
+- User, payment and object-storage modules whose structure follows the
+  upstream projects listed in [NOTICE](NOTICE). Those parts stay under the
+  licenses stated there; a commercial Order does **not** relicense them.
 - Go module dependencies listed in `go.mod` / `go.sum`
 
 Licensee is responsible for complying with those licenses.

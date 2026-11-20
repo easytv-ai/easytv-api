@@ -1,0 +1,43 @@
+EasyTV API (easytv-api)
+Copyright (C) the EasyTV copyright holders
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License, version 3, as published by
+the Free Software Foundation. See LICENSE for the full text. A separate
+commercial license is described in COMMERCIAL-LICENSE.md; it covers only the
+material whose copyright the EasyTV copyright holders can grant.
+
+================================================================================
+Upstream projects
+================================================================================
+
+Parts of this repository (the structure of the user, payment and
+object-storage modules, and the route layout they sit behind) follow or derive
+from the projects below. Those parts keep their original terms. Keep this file
+when you redistribute the source or a modified version of it.
+
+1. New API
+   https://github.com/QuantumNous/new-api
+   License: GNU Affero General Public License v3.0 (AGPL-3.0)
+   New API is itself developed on the basis of One API.
+   Its README additionally asks, under AGPL-3.0 section 7, that modified
+   versions keep the notice "Frontend design and development by New API
+   contributors." and a visible link to the project in user interfaces. Read
+   the upstream README and NOTICE for the terms as currently published.
+
+2. One API
+   https://github.com/songquanpeng/one-api
+   License: MIT
+   Copyright (c) 2023 JustSong
+   Its README additionally asks derivative projects to keep an attribution and
+   a link to the project at the bottom of the page.
+
+A commercial license for EasyTV does not relicense the parts derived from
+these projects.
+
+================================================================================
+Other third-party code
+================================================================================
+
+Go module dependencies are listed in go.mod and go.sum and remain under their
+own licenses.
