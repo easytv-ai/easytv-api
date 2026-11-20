@@ -19,7 +19,7 @@ import (
 
 // ===== 网关模型 / 定价拉取（管理端 /admin/gateway/fetch-models 用）=====
 //
-// 网关（new-api 体系）的报价口径，全部是美元：
+// 网关的报价口径，全部是美元：
 //   - quota_type 0 按量：model_ratio 为 token 倍率，1 倍率 = 2 美元 / 百万 token（1 美元 = 500000 quota）；
 //     输出 token 再乘 completion_ratio。视频类按量模型 token 数由分辨率 × 帧率 × 时长决定，video_ratios 是分辨率倍率。
 //   - quota_type 1 按次：model_price 为美元 / 次；视频再乘 video_per_second_ratios 的分辨率倍率。

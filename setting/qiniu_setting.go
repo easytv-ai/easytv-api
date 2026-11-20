@@ -3,7 +3,7 @@ package setting
 import "strings"
 
 // 七牛云存储配置（DB setting 表，PascalCase 键，管理端 /admin/gateway/config 可热更新）。
-// 兼容 New API setting/system_setting/qiniu_setting.go。
+// 结构沿用上游项目（见 NOTICE）。
 const (
 	QiniuAccessKey   = "QiniuAccessKey"
 	QiniuSecretKey   = "QiniuSecretKey"
@@ -39,7 +39,7 @@ func GetQiniuDomain() string {
 	return strings.TrimRight(GetSettingString(QiniuDomain), "/")
 }
 
-// IsQiniuEnabled 七牛是否启用：AK/SK 都非空即启用（与 New API 一致）。
+// IsQiniuEnabled 七牛是否启用：AK/SK 都非空即启用。
 func IsQiniuEnabled() bool {
 	return GetQiniuAccessKey() != "" && GetQiniuSecretKey() != ""
 }

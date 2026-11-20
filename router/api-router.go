@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetApiRouter 用户侧路由（匿名 + UserAuth），路径与 New API 契约兼容，便于前端切换。
+// SetApiRouter 用户侧路由（匿名 + UserAuth），路径沿用上游项目的契约，便于前端切换。
 // 创作域（项目/画布/资产/任务/作品）契约见 API.md。
 func SetApiRouter(router *gin.Engine) {
 	apiRouter := router.Group("/")
@@ -338,7 +338,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.PUT("/team/member/:uid/limit", controller.SetTeamMemberLimit)
 				selfRoute.PUT("/team/member/:uid/permission", controller.SetTeamMemberPermission)
 
-				// ===== 七牛云（UserAuth，前端直传凭证；兼容 New API）=====
+				// ===== 七牛云（UserAuth，前端直传凭证）=====
 				selfRoute.GET("/qiniu/upload-token", controller.GetQiniuUploadToken)
 				selfRoute.GET("/qiniu/key", controller.GetQiniuKey)
 			}

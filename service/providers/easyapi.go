@@ -1,7 +1,7 @@
-// Package providers 生成厂商接入。EasyTV 只接自家的 EasyAPI 大模型网关（new-api 体系），
+// Package providers 生成厂商接入。EasyTV 只接自家的 EasyAPI 大模型网关（OpenAI 兼容），
 // 不直连任何模型厂商；网关侧负责路由到 Kling / 即梦 / Vidu / Sora 等。
 //
-// 网关契约（OpenAI 兼容 + new-api 统一视频接口）：
+// 网关契约（OpenAI 兼容 + 统一视频接口）：
 //   - 文本：POST /v1/chat/completions
 //   - 图片：POST /v1/images/generations
 //   - 语音：POST /v1/audio/speech（返回二进制音频）
@@ -877,7 +877,7 @@ type videosAPIData struct {
 
 // parseVideosAPIResponse 解析 /v1/videos 响应。网关实际出现过、或同类网关常见的格式都兼容：
 //   - 包裹格式：{"code":200|"200"|"success", "msg":"", "data":{"job_id":"...", "download_url":"..."}}
-//   - 直通格式（OpenAI / new-api 视频对象）：{"id":"task_xxx", "status":"completed", "progress":100,
+//   - 直通格式（OpenAI 视频对象）：{"id":"task_xxx", "status":"completed", "progress":100,
 //     "error":{"message":"..."}, "metadata":{"url":"..."}}
 //
 // 字段类型不做强约束（code/id 可能是字符串或数字），避免一个类型不符就整条解析失败、任务白等 30 分钟。
@@ -1107,7 +1107,7 @@ func (p *EasyAPIProvider) QueryVideosAPITask(remoteId string) (*videoTask, error
 	}, nil
 }
 
-// openVideoContent 成功但响应里没有地址时（OpenAI / new-api 视频对象就是这样），
+// openVideoContent 成功但响应里没有地址时（OpenAI 视频对象就是这样），
 // 带鉴权取 GET /v1/videos/{id}/content。
 func (p *EasyAPIProvider) openVideoContent(remoteId string) (io.ReadCloser, error) {
 	req, err := http.NewRequest(http.MethodGet, p.baseUrl+"/v1/videos/"+remoteId+"/content", nil)

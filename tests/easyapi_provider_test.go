@@ -13,7 +13,7 @@ import (
 	"easytv-api/service/providers"
 )
 
-// fakeGateway 模拟 EasyAPI 网关（new-api 契约）。
+// fakeGateway 模拟 EasyAPI 网关。
 func fakeGateway(t *testing.T) (*httptest.Server, *[]string) {
 	t.Helper()
 	var seen []string
