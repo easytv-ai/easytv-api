@@ -87,6 +87,29 @@ func TestParseGatewayVideoReference(t *testing.T) {
 	}
 }
 
+func TestSpellResolution(t *testing.T) {
+	kling := []string{"720P", "1080P"}
+	if got := spellResolution("720p", kling); got != "720P" {
+		t.Fatalf("Kling 枚举是大写，送出 %q", got)
+	}
+	if got := spellResolution("1080P", kling); got != "1080P" {
+		t.Fatalf("已经是枚举原文，送出 %q", got)
+	}
+	if got := spellResolution("2K", kling); got != "2K" {
+		t.Fatalf("枚举对不上应保持原文，送出 %q", got)
+	}
+	if got := spellResolution("720P", nil); got != "720p" {
+		t.Fatalf("没有参数表时应改成广场默认的小写，送出 %q", got)
+	}
+	seedance := []string{"480p", "720p", "1080p"}
+	if got := spellResolution("720P", seedance); got != "720p" {
+		t.Fatalf("Seedance 枚举是小写，送出 %q", got)
+	}
+	if got, ok := matchDeclared("16:9", []string{"16:9", "9:16", "1:1"}); !ok || got != "16:9" {
+		t.Fatalf("比例 = %q ok=%v", got, ok)
+	}
+}
+
 func hasAbility(list []string, want string) bool {
 	for _, v := range list {
 		if v == want {

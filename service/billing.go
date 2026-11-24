@@ -647,9 +647,16 @@ func FailTask(taskId int, msg string) error {
 
 // CancelTask 用户取消：置取消、退回预扣积分、免积分对话任务再退一次每日次数，全部同一事务提交。
 func CancelTask(userId, taskId int) error {
-	// 退分会把 points_frozen 清零，先记下金额，审计里才看得到退了多少
+	// 退分会把 points_frozen 清零，先记下金额，审计里才看得到退了多少。
+	// 已经交给模型的图片 / 视频 / 音频在这里直接拒绝，避免进事务后再退分。
 	frozen := 0
 	if t, err := model.GetTaskById(taskId); err == nil {
+		if t.UserId != userId {
+			return model.ErrTaskStatus
+		}
+		if model.MediaCancelBlocked(t) {
+			return model.ErrGenerationCommitted
+		}
 		frozen = t.PointsFrozen
 	}
 	err := model.DB.Transaction(func(tx *gorm.DB) error {

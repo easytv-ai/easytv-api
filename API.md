@@ -116,7 +116,7 @@
 | cost_points | int | 扣减积分（provider 回填） |
 | created_at / started_at / finished_at | int64 | |
 
-**生成只走 EasyAPI 网关**（`service/providers/easyapi.go`），不直连任何模型厂商：文本 `POST /v1/chat/completions`、图片 `POST /v1/images/generations`、语音 `POST /v1/audio/speech`、视频 `POST /v1/videos` + `GET /v1/videos/{job_id}` 轮询（素材用 `input_references[{type,url,role}]` 数组，支持 `first_frame`/`last_frame`/`reference` 图、`reference_video`、`reference_audio`，任务完成后从响应 `download_url` 下载成片；网关任务 ID 记入 `generation_task.provider_task_id`，进程重启后自动恢复轮询）。可用模型清单 = **`model_price` 表（status=1）单一数据源**，通过 `GET /generation/models` 下发给前端；管理端 `GET /admin/gateway/fetch-models` 从网关拉取模型与定价（含建议积分：网关美元成本 × 汇率 × 毛利系数 × 积分/元，按量模型按假设用量折成次 / 张 / 秒，见 docs/ops/easyapi-gateway.md），`POST /admin/gateway/models/import` 导入 `model_price` 并定价。`POST /user/task` 的 `model` 不在清单里时返回 `模型暂未接入`，不落库。`params` 透传约定：`ratio` / `aspect_ratio`（比例，视频走顶层字段，`ratio` 为旧参数名兼容）、`resolution`（480P/720P/1080P）、`duration`（秒）、`size`（直接指定尺寸）、`generate_audio`（是否生成音频）、`seed`（随机种子）、`voice`（语音音色）、`negative_prompt`（进 metadata）。`inputs` 素材角色：`first_frame`（首帧图）、`last_frame`（尾帧图）、`reference`（外观参考图，不作首帧）、`reference_video`（参考视频）、`reference_audio`（参考音频）。**文本任务（type=text）也可带图片**：`inputs` 里 `image` / `reference` 等图片角色的素材（最多 4 张）按 OpenAI 视觉格式随消息发给模型（`content` = `text` + `image_url` 数组；公网地址直接给 URL，本地存储转 data URL），用于画布「反推提示词」与智能编辑「智能识别」，需选能看图的文本模型（如 gpt-4o-mini）；不带图片时与原来一样只发文字。网关地址/令牌经 setting（`EasyAPIGatewayBaseUrl`/`EasyAPIGatewayKey`/`EasyAPIGatewayEnabled`）在 `/admin/gateway/config` 热更新；定价接口不在同域名时另填 `EasyAPIGatewayPricingBaseUrl`（`pricing_base_url`），`fetch-models` 会从网关分辨率倍率表推出视频模型的 `resolutions` 一并导入（已有值不覆盖）。
+**生成只走 EasyAPI 网关**（`service/providers/easyapi.go`），不直连任何模型厂商：文本 `POST /v1/chat/completions`、图片 `POST /v1/images/generations`、语音 `POST /v1/audio/speech`、视频 `POST /v1/videos` + `GET /v1/videos/{job_id}` 轮询（素材用 `input_references[{type,url,role}]` 数组，支持 `first_frame`/`last_frame`/`reference_image` 图、`reference_video`、`reference_audio`（画布 inputs 的 `reference` / `character` / `scene` / `style` / `subject` 出网关时写成 `reference_image`，与模型广场 playground 一致），任务完成后从响应 `download_url` 下载成片；网关任务 ID 记入 `generation_task.provider_task_id`，进程重启后自动恢复轮询）。可用模型清单 = **`model_price` 表（status=1）单一数据源**，通过 `GET /generation/models` 下发给前端；管理端 `GET /admin/gateway/fetch-models` 从网关拉取模型与定价（含建议积分：网关美元成本 × 汇率 × 毛利系数 × 积分/元，按量模型按假设用量折成次 / 张 / 秒，见 docs/ops/easyapi-gateway.md），`POST /admin/gateway/models/import` 导入 `model_price` 并定价。`POST /user/task` 的 `model` 不在清单里时返回 `模型暂未接入`，不落库。`params` 透传约定：`ratio` / `aspect_ratio`（比例，视频走顶层字段，`ratio` 为旧参数名兼容）、`resolution`（出网关时按该模型参数表枚举的原样写法，例如 `720P` 或 `720p`；参数表没声明时才用小写）、`duration`（秒）、`size`（直接指定尺寸）、`generate_audio`（是否生成音频）、`seed`（随机种子）、`voice`（语音音色）、`negative_prompt`（进 metadata）。`inputs` 素材角色：`first_frame`（首帧图）、`last_frame`（尾帧图）、`reference`（外观参考图，不作首帧）、`reference_video`（参考视频）、`reference_audio`（参考音频）。**文本任务（type=text）也可带图片**：`inputs` 里 `image` / `reference` 等图片角色的素材（最多 4 张）按 OpenAI 视觉格式随消息发给模型（`content` = `text` + `image_url` 数组；公网地址直接给 URL，本地存储转 data URL），用于画布「反推提示词」与智能编辑「智能识别」，需选能看图的文本模型（如 gpt-4o-mini）；不带图片时与原来一样只发文字。网关地址/令牌经 setting（`EasyAPIGatewayBaseUrl`/`EasyAPIGatewayKey`/`EasyAPIGatewayEnabled`）在 `/admin/gateway/config` 热更新；定价接口不在同域名时另填 `EasyAPIGatewayPricingBaseUrl`（`pricing_base_url`），`fetch-models` 会从网关分辨率倍率表推出视频模型的 `resolutions` 一并导入（已有值不覆盖）。
 
 ### 1.5 work 作品（发布后的成片）
 
@@ -296,7 +296,7 @@
 | POST | `/user/task` | 创建生成任务 | `{ type, model, prompt, params, inputs, canvas_id?, node_id?, project_id? }` |
 | GET | `/user/task` | 任务列表 | `canvas_id?, status?, page, page_size` ，另支持 `keyword`（提示词 / 模型 / 单号）、`active=1`（只看进行中） |
 | GET | `/user/task/:id` | 任务详情（前端轮询） | |
-| POST | `/user/task/:id/cancel` | 取消（仅 pending/running） | |
+| POST | `/user/task/:id/cancel` | 取消（仅 pending/running）。图片 / 视频 / 音频一旦进入生成（`running`，或已有网关任务号）不能取消、不退积分；还在本地排队的 `pending` 可以取消并退回。文本任务两种状态都可以取消 | |
 | GET | `/user/work` | 我的作品 | `status?, keyword?, page, page_size`（keyword 按标题模糊搜，与公开 `GET /work` 相同） |
 | POST | `/user/work` | 从资产发布作品 | `{ title, description, asset_id, project_id?, canvas_id?, cover_url?, category?, show_process? }` → status 1 |
 | PUT | `/user/work/:id` | 修改 / 上下架 | `{ title?, description?, cover_url?, category?, status? (1/2), show_process? }` |
@@ -1263,7 +1263,7 @@ timeline = { aspect: 16:9|9:16|1:1, resolution: 720p|1080p, subtitles, voice, la
 |---|---|---|
 | POST | `/user/canvas/:id/batch` | `{ budget_points?, items: [{ node_id, layer, type, model, prompt, params, inputs: [{asset_id, role}], depends: [{node_id, role}] }] }`。同一画布同时只能有一个进行中 / 暂停的批次；最多 80 个节点；节点必须在画布里；依赖指向本批次节点，或画布里已有产物的节点；不能成环；count 只能是 1。返回批次（含估算总积分 `estimate_points`） |
 | GET | `/user/canvas/:id/batch` | 画布最近一个批次（含 `items`），没有时 `data=null` |
-| POST | `/user/batch/:id/pause` / `resume` / `cancel` / `retry-failed` | 暂停只停止提交（已提交的继续跑并同步结果）；取消会取消还在跑的任务并退分；只重跑失败把 failed / skipped 条目放回 waiting，批次回到 running |
+| POST | `/user/batch/:id/pause` / `resume` / `cancel` / `retry-failed` | 暂停只停止提交（已提交的继续跑并同步结果）；取消只停掉还没提交的条目。已经交给模型的图片 / 视频 / 音频继续跑、不退分，worker 仍同步它们的结果；只重跑失败把 failed / skipped 条目放回 waiting，批次回到 running |
 
 worker 每轮：
 1. 已提交条目按任务状态同步（成功记 `asset_id`，失败 / 取消记 `error`）；
@@ -1748,7 +1748,7 @@ AI 动作按「能力位」接模型（运营配了模型即上线，没配就�
 
 **模型动作创建时同步提交生成任务**：任务计费失败（积分不足 / 未定价 / 并发满）时创建接口直接报错且不落作业；
 任务提交成功但网关同步报错时，任务已标失败退分，作业状态同样是 `-1`。
-取消模型动作走既有 `POST /user/task/:id/cancel`（作业里带 `task_id`）；本地动作秒级完成，不设取消。
+取消模型动作走既有 `POST /user/task/:id/cancel`（作业里带 `task_id`）。图片 / 视频 / 音频已经进入生成时该接口拒绝取消、不退积分；本地动作秒级完成，不设取消。
 
 ### 23.3 动作清单
 
@@ -1872,7 +1872,7 @@ POST /user/media/jobs
 → ③ 任务成功后 worker 把新片段按段长裁切并缩放到源尺寸，与 `[0,start)`、`[end,总长)` 拼成整条，原声按 `keep_audio` 处理，产物入资产库。
 
 - 响应同 23.2，`engine=pipeline`；状态：任务排队 / 生成中映射为 `0 / 1`，任务失败 → `-1`（积分已按生成任务退回），拼接失败 → `-1`（`error` 写明，生成的片段仍进资产库不丢）。
-- `outputs[0]` = 整条成片 `{type:"video", label:"重拍成片"}`，`outputs[1]` = 重拍的片段 `{type:"video", label:"重拍片段"}`；`task_id` 为生成任务（取消走 `POST /user/task/:id/cancel`，取消后作业标失败）。
+- `outputs[0]` = 整条成片 `{type:"video", label:"重拍成片"}`，`outputs[1]` = 重拍的片段 `{type:"video", label:"重拍片段"}`；`task_id` 为生成任务。视频一旦进入生成就不能取消、不退积分。
 - 生成任务参数：同模型沿用源任务参数，换模型只保留画幅；**音频开关（`audio` / `generate_audio`）一律不带**（hailuo 等模型会 400）。任务失败且带了末帧时，worker 自动去掉 `last_frame` 重提一次（不少模型不收末帧），只重试一次。
 - 计费：只有生成任务那一段按模型定价扣分；拼接免费。队列：与本地动作共用 `MediaJobMaxPerUser` / `MediaJobMaxQueue`。
 - `GET /user/media/actions` 里 `retake_segment` 的 `available` = 有 ffmpeg 且至少一个已定价视频模型；`models` 列出可选视频模型。

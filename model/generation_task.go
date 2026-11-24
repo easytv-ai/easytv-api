@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"easytv-api/common"
@@ -66,6 +67,23 @@ const (
 )
 
 var ErrTaskStatus = errors.New("任务当前状态不允许该操作")
+
+// ErrGenerationCommitted 图片 / 视频 / 音频已经交给模型。上游没有取消接口，取消只会退用户的积分，模型侧仍会计费。
+var ErrGenerationCommitted = errors.New("生成已经提交，不能取消，积分不会退回")
+
+// MediaCancelBlocked 图片、视频、音频一旦进入生成（或已经拿到网关任务号）就不能取消退分。
+// 还在本地排队、尚未交给模型的 pending 任务可以取消，积分退回。文本任务不受这条限制。
+func MediaCancelBlocked(t *GenerationTask) bool {
+	if t == nil {
+		return false
+	}
+	switch t.Type {
+	case TaskTypeImage, TaskTypeVideo, TaskTypeAudio:
+		return t.Status == TaskStatusRunning || strings.TrimSpace(t.ProviderTaskId) != ""
+	default:
+		return false
+	}
+}
 
 // IsValidTaskType 校验任务类型。
 func IsValidTaskType(t string) bool {
@@ -361,8 +379,10 @@ func CancelUserTask(userId, id int) error {
 
 // CancelUserTaskTx 同 CancelUserTask，在调用方事务里执行。
 func CancelUserTaskTx(tx *gorm.DB, userId, id int) error {
+	// 图片 / 视频 / 音频已经在跑（或已有网关任务号）的，条件更新匹配不到，下面再区分「不能取消」和「状态不对」
 	result := tx.Model(&GenerationTask{}).
 		Where("id = ? AND user_id = ? AND status IN ?", id, userId, []string{TaskStatusPending, TaskStatusRunning}).
+		Where("NOT (type IN ? AND (status = ? OR provider_task_id <> ''))", []string{TaskTypeImage, TaskTypeVideo, TaskTypeAudio}, TaskStatusRunning).
 		Updates(map[string]any{
 			"status":      TaskStatusCancelled,
 			"finished_at": common.GetTimestamp(),
@@ -371,6 +391,11 @@ func CancelUserTaskTx(tx *gorm.DB, userId, id int) error {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
+		var cur GenerationTask
+		err := tx.Where("id = ? AND user_id = ?", id, userId).First(&cur).Error
+		if err == nil && MediaCancelBlocked(&cur) {
+			return ErrGenerationCommitted
+		}
 		return ErrTaskStatus
 	}
 	return nil

@@ -138,9 +138,16 @@ func GetBatchItems(batchId int) ([]*GenerationBatchItem, error) {
 }
 
 // GetRunningOrPausedBatches worker 每轮处理的批次（暂停中的也要同步已提交任务的结果）。
+// 已取消但仍有「已提交」条目的批次也要领走：那些任务已经交给模型，只同步结果，不再提交新的。
 func GetRunningOrPausedBatches(limit int) ([]*GenerationBatch, error) {
 	var list []*GenerationBatch
-	err := DB.Where("status IN ? AND worker_tag = ?", []string{BatchRunning, BatchPaused}, common.WorkerTag()).Order("id asc").Limit(limit).Find(&list).Error
+	err := DB.Where(
+		"worker_tag = ? AND (status IN ? OR (status = ? AND id IN (SELECT batch_id FROM generation_batch_item WHERE status = ?)))",
+		common.WorkerTag(),
+		[]string{BatchRunning, BatchPaused},
+		BatchCancelled,
+		BatchItemSubmitted,
+	).Order("id asc").Limit(limit).Find(&list).Error
 	return list, err
 }
 

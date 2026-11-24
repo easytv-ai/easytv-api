@@ -213,7 +213,7 @@ func ResumeBatch(b *model.GenerationBatch) error {
 	return nil
 }
 
-// CancelBatch 取消：没提交的直接取消；已提交还在跑的任务一并取消并退回积分。
+// CancelBatch 取消：没提交的直接取消。已经交给模型的图片 / 视频 / 音频不停、不退分，条目保持已提交，worker 继续同步结果。
 func CancelBatch(b *model.GenerationBatch) error {
 	if !model.TransitBatch(b.Id, []string{model.BatchRunning, model.BatchPaused}, map[string]any{"status": model.BatchCancelled, "finished_at": common.GetTimestamp()}) {
 		return model.ErrBatchStatus
@@ -230,7 +230,12 @@ func CancelBatch(b *model.GenerationBatch) error {
 		}
 		switch t.Status {
 		case model.TaskStatusPending, model.TaskStatusRunning:
-			_ = CancelTask(b.UserId, it.TaskId)
+			if model.MediaCancelBlocked(t) {
+				continue
+			}
+			if err := CancelTask(b.UserId, it.TaskId); err != nil {
+				continue
+			}
 			model.UpdateBatchItem(it.Id, []string{model.BatchItemSubmitted}, map[string]any{"status": model.BatchItemCancelled, "error": "批量生成已取消"})
 		case model.TaskStatusSucceeded:
 			// 取消前已经跑完的保留结果（worker 不再处理已取消的批次，这里顺手同步）

@@ -277,12 +277,14 @@ func TestVideoRoleType(t *testing.T) {
 		{"first_frame", "image", "first_frame", true},
 		{"image", "image", "first_frame", true}, // 向后兼容归一
 		{"last_frame", "image", "last_frame", true},
-		{"reference", "image", "reference", true},
+		{"reference", "image", "reference_image", true},
+		{"reference_image", "image", "reference_image", true},
 		{"reference_video", "video", "reference_video", true},
 		{"reference_audio", "audio", "reference_audio", true},
-		{"character", "image", "reference", true}, // 画布角色参考 / 主体库
-		{"scene", "image", "reference", true},
-		{"style", "image", "reference", true},
+		{"character", "image", "reference_image", true}, // 画布角色参考 / 主体库
+		{"scene", "image", "reference_image", true},
+		{"style", "image", "reference_image", true},
+		{"subject", "image", "reference_image", true},
 		{"voice", "audio", "reference_audio", true},
 		{"unknown_role", "", "", false},
 	}

@@ -7,7 +7,7 @@
 //   - 语音：POST /v1/audio/speech（返回二进制音频）
 //   - 视频：POST /v1/videos，GET /v1/videos/{job_id} 轮询；响应兼容包裹格式 {code,data:{job_id,status,download_url}}
 //     与直通格式 {id,status,progress,error}，成功但没有地址时取 GET /v1/videos/{job_id}/content，
-//     素材用 input_references[{type,url,role}] 数组：first_frame/last_frame/reference（image）、reference_video、reference_audio。
+//     素材用 input_references[{type,url,role}] 数组：first_frame/last_frame/reference_image（image）、reference_video、reference_audio。
 //
 // 网关配置（DB setting 表，管理端 /admin/gateway/config 热更新）：
 //   - EasyAPIGatewayKey       网关令牌（必填，缺省不注册 provider）
@@ -319,20 +319,20 @@ func sizeFromRatio(ratio string) string {
 type InputReference struct {
 	Type string `json:"type"` // image / video / audio
 	Url  string `json:"url"`
-	Role string `json:"role"` // first_frame / last_frame / reference / reference_video / reference_audio
+	Role string `json:"role"` // first_frame / last_frame / reference_image / reference_video / reference_audio
 }
 
 // VideoRoleType 素材角色 → (input_references.type, 归一化 role)；"image" 向后兼容归一为 first_frame。
-// 不支持的返回 ("", "", false)。
+// 画布仍用 reference / character / scene / style / subject，出网关写成 reference_image
+// （与 easyapi.com 模型广场 playground 的 role 枚举一致）。不支持的返回 ("", "", false)。
 func VideoRoleType(role string) (string, string, bool) {
 	switch role {
 	case "first_frame", "image":
 		return "image", "first_frame", true
 	case "last_frame":
 		return "image", "last_frame", true
-	case "reference", "character", "scene", "style", "subject":
-		// 画布「角色 / 场景 / 风格」参考与主体库参考图：网关只认 reference
-		return "image", "reference", true
+	case "reference", "reference_image", "character", "scene", "style", "subject":
+		return "image", "reference_image", true
 	case "reference_video":
 		return "video", "reference_video", true
 	case "reference_audio", "voice":
@@ -993,6 +993,55 @@ func anyNumber(v any) (float64, bool) {
 	return 0, false
 }
 
+// matchDeclared 在参数表枚举里按大小写不敏感找到原样写法。
+func matchDeclared(requested string, declared []string) (string, bool) {
+	requested = strings.TrimSpace(requested)
+	if requested == "" {
+		return "", false
+	}
+	for _, item := range declared {
+		item = strings.TrimSpace(item)
+		if item != "" && strings.EqualFold(item, requested) {
+			return item, true
+		}
+	}
+	return "", false
+}
+
+// spellResolution 出网关的分辨率。参数表有枚举就用枚举原文；没有枚举时沿用广场的默认档（小写 720p）。
+// 枚举对不上时保持调用方原文，避免把 2K 改成 2k。
+func spellResolution(requested string, declared []string) string {
+	requested = strings.TrimSpace(requested)
+	if requested == "" {
+		return ""
+	}
+	if spelled, ok := matchDeclared(requested, declared); ok {
+		return spelled
+	}
+	if len(declared) == 0 {
+		return strings.ToLower(requested)
+	}
+	return requested
+}
+
+// gatewayVideoSpell 读该模型在网关参数表里声明的分辨率、比例枚举。读不到就当没声明。
+func gatewayVideoSpell(modelName string) (resolutions, aspects []string) {
+	modelName = strings.TrimSpace(modelName)
+	// 单测和进程刚起来时没有数据库，读不了网关开关，按「参数表没声明」处理
+	if modelName == "" || model.DB == nil || !setting.IsGatewayEnabled() {
+		return nil, nil
+	}
+	detail, err := FetchGatewayModelDetail(modelName, "")
+	if err != nil || detail == nil {
+		return nil, nil
+	}
+	fields, ok := ParseGatewayParams(detail.Params)
+	if !ok {
+		return nil, nil
+	}
+	return fields.Resolutions, fields.AspectRatios
+}
+
 // videoMetadataKeys 允许透传进 metadata 的参数。其余（count / mode / edit 等前端业务字段）不发：
 // 部分渠道会把 metadata 合并进上游请求体，多余字段可能被上游当未知参数拒绝。
 var videoMetadataKeys = []string{"negative_prompt", "camera_fixed", "watermark"}
@@ -1016,14 +1065,20 @@ func (p *EasyAPIProvider) CreateVideosAPITask(modelName, prompt string, inputRef
 	if size := params.str("size"); size != "" {
 		body["size"] = size
 	}
+	// 分辨率、比例按该模型参数表枚举的原样写法送出（720P 与 720p 不是同一个值）。
+	// 跟模型广场一样：对得上枚举就用枚举里的字符串；参数表没声明分辨率时才改成小写。
+	resolutions, aspects := gatewayVideoSpell(modelName)
 	if res := params.str("resolution"); res != "" {
-		body["resolution"] = strings.ToLower(res)
+		body["resolution"] = spellResolution(res, resolutions)
 	}
 	ratio := params.str("aspect_ratio")
 	if ratio == "" {
 		ratio = params.str("ratio") // 旧参数名向后兼容
 	}
 	if ratio != "" {
+		if spelled, ok := matchDeclared(ratio, aspects); ok {
+			ratio = spelled
+		}
 		body["aspect_ratio"] = ratio
 	}
 	if v, ok := params.boolVal("generate_audio"); ok {

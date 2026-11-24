@@ -42,6 +42,8 @@ func respondModelError(c *gin.Context, err error, fallback string) {
 		common.ApiErrorMsg(c, model.ErrCanvasVersionConflict.Error())
 	case errors.Is(err, model.ErrTaskStatus):
 		common.ApiErrorMsg(c, model.ErrTaskStatus.Error())
+	case errors.Is(err, model.ErrGenerationCommitted):
+		common.ApiErrorMsg(c, model.ErrGenerationCommitted.Error())
 	default:
 		common.SysError(fallback + ": " + err.Error())
 		common.ApiErrorMsg(c, fallback)
