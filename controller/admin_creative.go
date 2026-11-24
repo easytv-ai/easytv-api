@@ -41,6 +41,7 @@ func adminUserView(u *model.User) gin.H {
 		"campaign":        u.Campaign,
 		"bonus_code":      u.BonusCode,
 		"remark":          u.Remark,
+		"avatar":          model.SettingAvatar(u.Setting),
 		"created_at":      u.CreatedAt,
 		"last_login_at":   u.LastLoginAt,
 	}
@@ -302,6 +303,7 @@ func AdminGetAssets(c *gin.Context) {
 			"type":       a.Type,
 			"name":       a.Name,
 			"url":        a.Url,
+			"cover_url":  a.CoverUrl,
 			"mime":       a.Mime,
 			"size":       a.Size,
 			"source":     a.Source,

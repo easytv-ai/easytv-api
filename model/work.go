@@ -1,9 +1,7 @@
 package model
 
 import (
-	"encoding/json"
 	"errors"
-	"strings"
 
 	"easytv-api/common"
 
@@ -321,19 +319,23 @@ func GetUserNicknames(ids []int) map[int]string {
 	return names
 }
 
-// settingAvatar 从用户 setting JSON 里取出头像地址。
-func settingAvatar(raw string) string {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return ""
+// GetUserAvatars 批量取用户头像（setting.avatar）。
+func GetUserAvatars(ids []int) map[int]string {
+	avatars := map[int]string{}
+	if len(ids) == 0 {
+		return avatars
 	}
-	var parsed struct {
-		Avatar string `json:"avatar"`
+	var users []struct {
+		Id      int
+		Setting string
 	}
-	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
-		return ""
+	DB.Unscoped().Model(&User{}).Select("id, setting").Where("id IN ?", ids).Scan(&users)
+	for _, u := range users {
+		if avatar := SettingAvatar(u.Setting); avatar != "" {
+			avatars[u.Id] = avatar
+		}
 	}
-	return strings.TrimSpace(parsed.Avatar)
+	return avatars
 }
 
 // attachWorkAuthors 填充作者昵称和头像。
@@ -364,7 +366,7 @@ func attachWorkAuthors(list []*Work) {
 		byId[u.Id] = struct {
 			Name   string
 			Avatar string
-		}{Name: name, Avatar: settingAvatar(u.Setting)}
+		}{Name: name, Avatar: SettingAvatar(u.Setting)}
 	}
 	for _, w := range list {
 		brief := byId[w.UserId]

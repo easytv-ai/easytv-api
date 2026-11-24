@@ -406,6 +406,13 @@ func WeChatOAuthCallback(c *gin.Context) {
 		weChatOAuthCallbackError(c, redirectURL, state, "user_banned")
 		return
 	}
+	if next, ok := model.FillSettingAvatar(user.Setting, userInfo.HeadimgURL); ok {
+		if err := model.DB.Model(&model.User{}).Where("id = ?", user.Id).Update("setting", next).Error; err != nil {
+			logger.LogError(c.Request.Context(), fmt.Sprintf("wechat oauth save avatar failed: %s", err.Error()))
+		} else {
+			user.Setting = next
+		}
+	}
 	model.UpdateUserLastLoginAt(user.Id)
 	accessToken, err := model.EnsureUserAccessToken(user.Id)
 	if err != nil {

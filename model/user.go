@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -63,6 +64,43 @@ type User struct {
 }
 
 func (User) TableName() string { return "user" }
+
+// SettingAvatar 从用户 setting JSON 里取出头像地址。创作台把头像写在 setting.avatar。
+func SettingAvatar(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	var parsed struct {
+		Avatar string `json:"avatar"`
+	}
+	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(parsed.Avatar)
+}
+
+// FillSettingAvatar 仅在 setting.avatar 为空时写入头像，已有头像不覆盖。
+// 返回更新后的 setting JSON，以及是否发生了写入。
+func FillSettingAvatar(raw, avatar string) (string, bool) {
+	avatar = strings.TrimSpace(avatar)
+	if avatar == "" || SettingAvatar(raw) != "" {
+		return raw, false
+	}
+	obj := map[string]any{}
+	raw = strings.TrimSpace(raw)
+	if raw != "" {
+		if err := json.Unmarshal([]byte(raw), &obj); err != nil || obj == nil {
+			return raw, false
+		}
+	}
+	obj["avatar"] = avatar
+	buf, err := json.Marshal(obj)
+	if err != nil {
+		return raw, false
+	}
+	return string(buf), true
+}
 
 // ErrEmailAlreadyTaken 邮箱已被占用。
 var ErrEmailAlreadyTaken = errors.New("email already taken")

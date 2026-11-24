@@ -41,6 +41,7 @@ type TeamMember struct {
 
 	Nickname string `json:"nickname,omitempty" gorm:"-"`
 	Username string `json:"username,omitempty" gorm:"-"`
+	Avatar   string `json:"avatar,omitempty" gorm:"-"`
 	// PointsLeft 本月剩余（非表字段）；nil 表示不限
 	PointsLeft *int `json:"points_left" gorm:"-"`
 }
@@ -162,8 +163,10 @@ func GetTeamMembers(teamId int) (list []*TeamMember, err error) {
 		ids = append(ids, m.UserId)
 	}
 	names := GetUserNicknames(ids)
+	avatars := GetUserAvatars(ids)
 	for _, m := range list {
 		m.Nickname = names[m.UserId]
+		m.Avatar = avatars[m.UserId]
 	}
 	return list, nil
 }
