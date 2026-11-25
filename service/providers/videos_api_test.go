@@ -129,6 +129,38 @@ func TestVideosAPIRequestAndContentFallback(t *testing.T) {
 	}
 }
 
+func TestVideosAPISmartDurationAndModelFields(t *testing.T) {
+	var created map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(body, &created)
+		_, _ = w.Write([]byte(`{"id":"task_wan","status":"queued"}`))
+	}))
+	defer srv.Close()
+	p := NewEasyAPIProvider(srv.URL, "sk-test", nil)
+	id, err := p.CreateVideosAPITask("wan3.0-video-prime", "夜景", nil, taskParams{
+		"duration": float64(-1), "ratio": "adaptive", "prompt_extend": false, "watermark": false, "seed": float64(7),
+	})
+	if err != nil || id != "task_wan" {
+		t.Fatalf("create: id=%q err=%v", id, err)
+	}
+	if created["duration"] != float64(-1) {
+		t.Errorf("智能时长 -1 要原样送出: %v", created["duration"])
+	}
+	if created["aspect_ratio"] != "adaptive" {
+		t.Errorf("adaptive 比例要送出: %v", created["aspect_ratio"])
+	}
+	if created["prompt_extend"] != false || created["watermark"] != false {
+		t.Errorf("智能改写和水印要作为顶层布尔送出: %v", created)
+	}
+	if created["seed"] != float64(7) {
+		t.Errorf("seed = %v", created["seed"])
+	}
+	if _, ok := created["metadata"]; ok {
+		t.Errorf("布尔水印不应再进 metadata: %v", created["metadata"])
+	}
+}
+
 // TestCreateVideoFailedWithoutId 创建即失败且没有 ID 时，报失败原因而不是「未返回任务 ID」。
 func TestCreateVideoFailedWithoutId(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

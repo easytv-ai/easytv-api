@@ -46,7 +46,7 @@ func TestEditImageMultipart(t *testing.T) {
 	p := NewEasyAPIProvider(srv.URL, "sk-test", nil)
 	_, b64, err := p.EditImage("gpt-image-2", "换成夜景", "1024x1024", "high",
 		[]ImageFile{{Name: "a.png", Data: pngHeader}, {Name: "b.png", Data: pngHeader}},
-		&ImageFile{Name: "mask.png", Data: pngHeader})
+		&ImageFile{Name: "mask.png", Data: pngHeader}, nil)
 	if err != nil || b64 != "aGVsbG8=" {
 		t.Fatalf("edit: b64=%q err=%v", b64, err)
 	}
@@ -63,14 +63,17 @@ func TestGenerateImageWithUrls(t *testing.T) {
 		if _, ok := req["quality"]; ok {
 			t.Errorf("url 方式不该带 quality: %v", req)
 		}
+		if req["output_format"] == "png" && req["sequential_image_generation"] != "auto" {
+			t.Errorf("schema extras = %v", req)
+		}
 		_, _ = w.Write([]byte(`{"data":[{"url":"https://cdn.example.com/out.png"}]}`))
 	}))
 	defer srv.Close()
 	p := NewEasyAPIProvider(srv.URL, "sk-test", nil)
-	if _, _, err := p.generateImage("seedream-4.5", "p", "", "", []string{"https://cdn/a.png"}); err != nil {
+	if _, _, err := p.generateImage("seedream-4.5", "p", "", "", []string{"https://cdn/a.png"}, nil); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := p.generateImage("seedream-4.5", "p", "", "", []string{"https://cdn/a.png", "https://cdn/b.png"}); err != nil {
+	if _, _, err := p.generateImage("seedream-4.5", "p", "", "", []string{"https://cdn/a.png", "https://cdn/b.png"}, map[string]string{"output_format": "png", "sequential_image_generation": "auto"}); err != nil {
 		t.Fatal(err)
 	}
 	if got[0] != "https://cdn/a.png" {

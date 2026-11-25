@@ -508,12 +508,23 @@ func (p *EasyAPIProvider) runText(task *model.GenerationTask) {
 
 // GenerateImage 调用 /v1/images/generations，返回图片 URL 或 base64 数据。
 func (p *EasyAPIProvider) GenerateImage(modelName, prompt, size string) (url string, b64 string, err error) {
-	return p.generateImage(modelName, prompt, size, "", nil)
+	return p.generateImage(modelName, prompt, size, "", nil, nil)
+}
+
+// imageSchemaExtras 图片参数表里除 size / quality 以外、网关认得的标量。
+func imageSchemaExtras(params taskParams) map[string]string {
+	extra := map[string]string{}
+	for _, key := range []string{"output_format", "sequential_image_generation", "background", "moderation"} {
+		if v := strings.TrimSpace(params.str(key)); v != "" {
+			extra[key] = v
+		}
+	}
+	return extra
 }
 
 // generateImage 文生图；imageUrls 非空时按 url 方式带参考图（seedream / qwen-image / gemini image 等，
 // 单张给字符串、多张给数组，与火山方舟 / 通义的 image 参数一致）。
-func (p *EasyAPIProvider) generateImage(modelName, prompt, size, quality string, imageUrls []string) (string, string, error) {
+func (p *EasyAPIProvider) generateImage(modelName, prompt, size, quality string, imageUrls []string, extra map[string]string) (string, string, error) {
 	body := map[string]any{
 		"model":  modelName,
 		"prompt": prompt,
@@ -524,6 +535,11 @@ func (p *EasyAPIProvider) generateImage(modelName, prompt, size, quality string,
 	}
 	if quality != "" {
 		body["quality"] = quality
+	}
+	for k, v := range extra {
+		if strings.TrimSpace(v) != "" {
+			body[k] = v
+		}
 	}
 	switch len(imageUrls) {
 	case 0:
@@ -561,7 +577,7 @@ type ImageFile struct {
 
 // EditImage 调用 /v1/images/edits（OpenAI 图像模型）：multipart 上传原图 / 参考图与可选蒙版。
 // 一张图用 image 字段，多张用 image[]（与 OpenAI SDK 一致）；每个文件带真实 Content-Type，否则 OpenAI 回 unsupported mimetype。
-func (p *EasyAPIProvider) EditImage(modelName, prompt, size, quality string, images []ImageFile, mask *ImageFile) (string, string, error) {
+func (p *EasyAPIProvider) EditImage(modelName, prompt, size, quality string, images []ImageFile, mask *ImageFile, extra map[string]string) (string, string, error) {
 	if len(images) == 0 {
 		return "", "", errors.New("图片编辑缺少原图")
 	}
@@ -573,6 +589,11 @@ func (p *EasyAPIProvider) EditImage(modelName, prompt, size, quality string, ima
 	}
 	if quality != "" {
 		fields["quality"] = quality
+	}
+	for k, v := range extra {
+		if strings.TrimSpace(v) != "" {
+			fields[k] = v
+		}
 	}
 	for k, v := range fields {
 		if err := w.WriteField(k, v); err != nil {
@@ -763,7 +784,7 @@ func (p *EasyAPIProvider) runImage(task *model.GenerationTask) {
 		err = errors.New("局部修改缺少原图")
 	case len(refs) == 0 || mode == model.ImageInputNone:
 		// 不支持参考图的模型：用户直接提交的参考图在创建接口已拒绝，走到这里的只有主体库并入的参考图，保留提示词里的主体描述
-		url, b64, err = p.generateImage(task.Model, task.Prompt, size, quality, nil)
+		url, b64, err = p.generateImage(task.Model, task.Prompt, size, quality, nil, imageSchemaExtras(params))
 	case mode == model.ImageInputEdits:
 		files := make([]ImageFile, 0, len(refs))
 		for _, a := range refs {
@@ -788,7 +809,7 @@ func (p *EasyAPIProvider) runImage(task *model.GenerationTask) {
 			}
 		}
 		if err == nil {
-			url, b64, err = p.EditImage(task.Model, task.Prompt, size, quality, files, maskFile)
+			url, b64, err = p.EditImage(task.Model, task.Prompt, size, quality, files, maskFile, imageSchemaExtras(params))
 		}
 	default:
 		urls := make([]string, 0, len(refs))
@@ -804,7 +825,7 @@ func (p *EasyAPIProvider) runImage(task *model.GenerationTask) {
 			err = fmt.Errorf("模型 %s 不支持蒙版局部修改，请换 gpt-image 系模型", task.Model)
 		}
 		if err == nil {
-			url, b64, err = p.generateImage(task.Model, task.Prompt, size, quality, urls)
+			url, b64, err = p.generateImage(task.Model, task.Prompt, size, quality, urls, imageSchemaExtras(params))
 		}
 	}
 	if err != nil {
@@ -1059,7 +1080,7 @@ func (p *EasyAPIProvider) CreateVideosAPITask(modelName, prompt string, inputRef
 		}
 		body["input_references"] = refs
 	}
-	if d := params.num("duration"); d > 0 {
+	if d := params.num("duration"); d > 0 || d == -1 {
 		body["duration"] = d
 	}
 	if size := params.str("size"); size != "" {
@@ -1086,11 +1107,23 @@ func (p *EasyAPIProvider) CreateVideosAPITask(modelName, prompt string, inputRef
 	} else if v, ok := params.boolVal("audio"); ok {
 		body["generate_audio"] = v // 画布 / 向导的「生成音频」开关传的是 audio
 	}
+	if v, ok := params.boolVal("prompt_extend"); ok {
+		body["prompt_extend"] = v
+	}
 	if v, ok := params.intVal("seed"); ok {
 		body["seed"] = v
 	}
+	// 水印在参数表里是顶层布尔。已经按顶层送出的不再塞进 metadata，避免同一字段出现两份。
+	watermarkSet := false
+	if v, ok := params.boolVal("watermark"); ok {
+		body["watermark"] = v
+		watermarkSet = true
+	}
 	meta := map[string]any{}
 	for _, k := range videoMetadataKeys {
+		if k == "watermark" && watermarkSet {
+			continue
+		}
 		if v, ok := params[k]; ok {
 			meta[k] = v
 		}
