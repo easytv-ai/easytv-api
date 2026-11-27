@@ -62,6 +62,14 @@ func RedisIncr(key string) (int64, error) {
 	return RedisClient.Incr(RedisCtx, key).Result()
 }
 
+// RedisExpire 给已有 key 补过期时间，不改当前计数。Redis 未初始化时返回错误。
+func RedisExpire(key string, expiration time.Duration) error {
+	if RedisClient == nil {
+		return errors.New("redis not initialized")
+	}
+	return RedisClient.Expire(RedisCtx, key, expiration).Err()
+}
+
 // RedisTTL 返回 key 剩余秒数（-1 无过期，-2 不存在）。Redis 未初始化时返回 -2。
 func RedisTTL(key string) time.Duration {
 	if RedisClient == nil {

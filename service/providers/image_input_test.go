@@ -73,7 +73,7 @@ func TestGenerateImageWithUrls(t *testing.T) {
 	if _, _, err := p.generateImage("seedream-4.5", "p", "", "", []string{"https://cdn/a.png"}, nil); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := p.generateImage("seedream-4.5", "p", "", "", []string{"https://cdn/a.png", "https://cdn/b.png"}, map[string]string{"output_format": "png", "sequential_image_generation": "auto"}); err != nil {
+	if _, _, err := p.generateImage("seedream-4.5", "p", "", "", []string{"https://cdn/a.png", "https://cdn/b.png"}, map[string]any{"output_format": "png", "sequential_image_generation": "auto"}); err != nil {
 		t.Fatal(err)
 	}
 	if got[0] != "https://cdn/a.png" {
@@ -81,6 +81,33 @@ func TestGenerateImageWithUrls(t *testing.T) {
 	}
 	if arr, ok := got[1].([]any); !ok || len(arr) != 2 {
 		t.Errorf("multi image = %v", got[1])
+	}
+}
+
+func TestSchemaScalarsReachImageRequest(t *testing.T) {
+	var req map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(body, &req)
+		_, _ = w.Write([]byte(`{"data":[{"url":"https://cdn.example.com/out.png"}]}`))
+	}))
+	defer srv.Close()
+	p := NewEasyAPIProvider(srv.URL, "sk-test", nil)
+	params := parseParams(`{"size":"2048x2048","count":4,"enable_thinking":true,"prompt_extend":false,"prompt_extend_mode":"direct","negative_prompt":"模糊","seed":7,"watermark":false}`)
+	if _, _, err := p.generateImage("qwen-image-3.0-pro", "设定图", "2048x2048", "", nil, schemaScalars(params)); err != nil {
+		t.Fatal(err)
+	}
+	if req["size"] != "2048x2048" || req["n"] != float64(1) {
+		t.Fatalf("size/n = %v %v", req["size"], req["n"])
+	}
+	if req["enable_thinking"] != true || req["prompt_extend"] != false || req["prompt_extend_mode"] != "direct" {
+		t.Fatalf("rewrite params = %v", req)
+	}
+	if req["negative_prompt"] != "模糊" || req["seed"] != float64(7) || req["watermark"] != false {
+		t.Fatalf("seed/watermark = %v", req)
+	}
+	if _, ok := req["count"]; ok {
+		t.Fatalf("count should stay off the gateway body: %v", req["count"])
 	}
 }
 

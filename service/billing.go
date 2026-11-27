@@ -377,6 +377,12 @@ func EstimateTaskPoints(taskType, modelName, paramsJSON string, isMember bool) (
 			count = n
 		}
 	}
+	// 图片高清：单价按产出像素计，产出 = 原图宽 × 高 × 倍数²。普通生图仍是单价 × 张数。
+	if taskType == model.TaskTypeImage {
+		if edit, _ := params["edit"].(string); edit == "upscale" {
+			return upscaleBillPoints(unitPrice, paramInt(params, "width", 0), paramInt(params, "height", 0), paramInt(params, "scale", 2), count), price, nil
+		}
+	}
 	units := count
 	if price.Unit == model.PriceUnitSecond {
 		seconds := paramInt(params, "duration", 5)
@@ -386,6 +392,37 @@ func EstimateTaskPoints(taskType, modelName, paramsJSON string, isMember bool) (
 		units = seconds * count
 	}
 	return unitPrice * units, price, nil
+}
+
+// upscaleBillBaseline 约一张 2K（1024×1024 再放大 2 倍）。
+// 一张这样的图按接近 1 倍单价计，更大的原图和更高的倍数按像素比例上浮。
+// 与前端 model-price.ts estimateUpscalePoints 同一整数口径。
+const upscaleBillBaseline int64 = 4_000_000
+
+// upscaleBillPoints 图片高清积分。有原图尺寸时按 ceil(单价 × 宽 × 高 × 倍数² / baseline)；
+// 再和倍数面积比（2→1、4→4、6→9 倍单价）取较高者。原图小于基准时不压到单价以下，
+// 更大的原图和更高的倍数仍按像素上浮。尺寸缺失时只用面积比。
+func upscaleBillPoints(unitPrice, width, height, scale, count int) int {
+	if unitPrice <= 0 {
+		return 0
+	}
+	if count < 1 {
+		count = 1
+	}
+	s := scale
+	if s != 4 && s != 6 {
+		s = 2
+	}
+	floor := unitPrice * (s * s / 4)
+	if width <= 0 || height <= 0 {
+		return floor * count
+	}
+	pixels := int64(width) * int64(height) * int64(s) * int64(s)
+	points := (int64(unitPrice)*pixels + upscaleBillBaseline - 1) / upscaleBillBaseline
+	if points < int64(floor) {
+		points = int64(floor)
+	}
+	return int(points) * count
 }
 
 // CheckModelDuration 提交前校验时长。各家模型允许的秒数不一样，

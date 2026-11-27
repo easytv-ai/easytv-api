@@ -24,8 +24,10 @@ func rateLimit(c *gin.Context, window int64, limit int64, key string) bool {
 		common.SysLog("rate limit incr failed: " + err.Error())
 		return true
 	}
-	if count == 1 {
-		_ = common.RedisSetEX(redisKey, 1, time.Duration(window)*time.Second)
+	// INCR 新建的 key 没有过期时间。只在 count==1 时去设置的话，这一下失败、
+	// 或并发请求先把计数顶过 1，key 就永远不过期，超过上限之后会一直拒绝。
+	if common.RedisTTL(redisKey) < 0 {
+		_ = common.RedisExpire(redisKey, time.Duration(window)*time.Second)
 	}
 	if count > limit {
 		return false

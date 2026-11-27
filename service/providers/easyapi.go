@@ -511,20 +511,58 @@ func (p *EasyAPIProvider) GenerateImage(modelName, prompt, size string) (url str
 	return p.generateImage(modelName, prompt, size, "", nil, nil)
 }
 
-// imageSchemaExtras 图片参数表里除 size / quality 以外、网关认得的标量。
-func imageSchemaExtras(params taskParams) map[string]string {
-	extra := map[string]string{}
-	for _, key := range []string{"output_format", "sequential_image_generation", "background", "moderation"} {
-		if v := strings.TrimSpace(params.str(key)); v != "" {
+// schemaSkip 画布自己的业务字段，以及已经单独写进请求体的键。
+// 参数表里的标量（思考、反向提示词、改写、水印、种子等）要原样带上，和模型广场一样。
+var schemaSkip = map[string]bool{
+	"model": true, "prompt": true, "size": true, "quality": true, "n": true,
+	"image": true, "images": true, "mask": true,
+	"stream": true, "partial_images": true, "webhook_url": true, "metadata": true,
+	"response_format": true, "user": true, "safety_identifier": true,
+	"input": true, "instructions": true, "file": true, "files": true,
+	"count": true, "mode": true, "edit": true, "ratio": true, "clarity": true,
+	"width": true, "height": true, "scale": true, "duration": true, "resolution": true,
+	"aspect_ratio": true, "audio": true, "generate_audio": true, "preset": true,
+	"reverse": true, "frames": true, "optimize": true, "videoEditOperation": true,
+}
+
+// schemaScalars 把参数表里的字符串、布尔、数字交给网关。对象和数组不传。
+func schemaScalars(params taskParams) map[string]any {
+	extra := map[string]any{}
+	for key, value := range params {
+		if schemaSkip[key] || value == nil {
+			continue
+		}
+		switch v := value.(type) {
+		case string:
+			if text := strings.TrimSpace(v); text != "" {
+				extra[key] = text
+			}
+		case bool:
+			extra[key] = v
+		case float64:
 			extra[key] = v
 		}
 	}
 	return extra
 }
 
+func schemaFieldString(value any) (string, bool) {
+	switch v := value.(type) {
+	case string:
+		text := strings.TrimSpace(v)
+		return text, text != ""
+	case bool:
+		return strconv.FormatBool(v), true
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64), true
+	default:
+		return "", false
+	}
+}
+
 // generateImage 文生图；imageUrls 非空时按 url 方式带参考图（seedream / qwen-image / gemini image 等，
 // 单张给字符串、多张给数组，与火山方舟 / 通义的 image 参数一致）。
-func (p *EasyAPIProvider) generateImage(modelName, prompt, size, quality string, imageUrls []string, extra map[string]string) (string, string, error) {
+func (p *EasyAPIProvider) generateImage(modelName, prompt, size, quality string, imageUrls []string, extra map[string]any) (string, string, error) {
 	body := map[string]any{
 		"model":  modelName,
 		"prompt": prompt,
@@ -537,9 +575,10 @@ func (p *EasyAPIProvider) generateImage(modelName, prompt, size, quality string,
 		body["quality"] = quality
 	}
 	for k, v := range extra {
-		if strings.TrimSpace(v) != "" {
-			body[k] = v
+		if text, ok := v.(string); ok && strings.TrimSpace(text) == "" {
+			continue
 		}
+		body[k] = v
 	}
 	switch len(imageUrls) {
 	case 0:
@@ -577,7 +616,7 @@ type ImageFile struct {
 
 // EditImage 调用 /v1/images/edits（OpenAI 图像模型）：multipart 上传原图 / 参考图与可选蒙版。
 // 一张图用 image 字段，多张用 image[]（与 OpenAI SDK 一致）；每个文件带真实 Content-Type，否则 OpenAI 回 unsupported mimetype。
-func (p *EasyAPIProvider) EditImage(modelName, prompt, size, quality string, images []ImageFile, mask *ImageFile, extra map[string]string) (string, string, error) {
+func (p *EasyAPIProvider) EditImage(modelName, prompt, size, quality string, images []ImageFile, mask *ImageFile, extra map[string]any) (string, string, error) {
 	if len(images) == 0 {
 		return "", "", errors.New("图片编辑缺少原图")
 	}
@@ -591,9 +630,11 @@ func (p *EasyAPIProvider) EditImage(modelName, prompt, size, quality string, ima
 		fields["quality"] = quality
 	}
 	for k, v := range extra {
-		if strings.TrimSpace(v) != "" {
-			fields[k] = v
+		text, ok := schemaFieldString(v)
+		if !ok {
+			continue
 		}
+		fields[k] = text
 	}
 	for k, v := range fields {
 		if err := w.WriteField(k, v); err != nil {
@@ -784,7 +825,7 @@ func (p *EasyAPIProvider) runImage(task *model.GenerationTask) {
 		err = errors.New("局部修改缺少原图")
 	case len(refs) == 0 || mode == model.ImageInputNone:
 		// 不支持参考图的模型：用户直接提交的参考图在创建接口已拒绝，走到这里的只有主体库并入的参考图，保留提示词里的主体描述
-		url, b64, err = p.generateImage(task.Model, task.Prompt, size, quality, nil, imageSchemaExtras(params))
+		url, b64, err = p.generateImage(task.Model, task.Prompt, size, quality, nil, schemaScalars(params))
 	case mode == model.ImageInputEdits:
 		files := make([]ImageFile, 0, len(refs))
 		for _, a := range refs {
@@ -809,7 +850,7 @@ func (p *EasyAPIProvider) runImage(task *model.GenerationTask) {
 			}
 		}
 		if err == nil {
-			url, b64, err = p.EditImage(task.Model, task.Prompt, size, quality, files, maskFile, imageSchemaExtras(params))
+			url, b64, err = p.EditImage(task.Model, task.Prompt, size, quality, files, maskFile, schemaScalars(params))
 		}
 	default:
 		urls := make([]string, 0, len(refs))
@@ -825,7 +866,7 @@ func (p *EasyAPIProvider) runImage(task *model.GenerationTask) {
 			err = fmt.Errorf("模型 %s 不支持蒙版局部修改，请换 gpt-image 系模型", task.Model)
 		}
 		if err == nil {
-			url, b64, err = p.generateImage(task.Model, task.Prompt, size, quality, urls, imageSchemaExtras(params))
+			url, b64, err = p.generateImage(task.Model, task.Prompt, size, quality, urls, schemaScalars(params))
 		}
 	}
 	if err != nil {
@@ -1130,6 +1171,15 @@ func (p *EasyAPIProvider) CreateVideosAPITask(modelName, prompt string, inputRef
 	}
 	if len(meta) > 0 {
 		body["metadata"] = meta
+	}
+	for key, value := range schemaScalars(params) {
+		if _, exists := body[key]; exists {
+			continue
+		}
+		if _, inMeta := meta[key]; inMeta {
+			continue
+		}
+		body[key] = value
 	}
 	raw, err := p.callRaw(http.MethodPost, "/v1/videos", body)
 	if err != nil && body["generate_audio"] != nil && strings.Contains(err.Error(), "generate_audio") {

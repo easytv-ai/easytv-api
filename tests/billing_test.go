@@ -159,6 +159,35 @@ func TestEstimateTaskPointsPromo(t *testing.T) {
 	}
 }
 
+// TestEstimateTaskPointsUpscale 图片高清按原图像素 × 倍数² 计费；普通生图不吃 scale。
+func TestEstimateTaskPointsUpscale(t *testing.T) {
+	mock := initMockDB(t)
+	row := func() *sqlmock.Rows {
+		return sqlmock.NewRows([]string{"id", "model", "type", "label", "unit", "points_per_unit", "member_points_per_unit", "status"}).
+			AddRow(1, "image-edit", "image", "高清", "image", 8, 6, 1)
+	}
+	expect := func(params string, member bool, want int) {
+		t.Helper()
+		mock.ExpectQuery("SELECT .* FROM `model_price` WHERE model = \\?").WillReturnRows(row())
+		points, _, err := service.EstimateTaskPoints("image", "image-edit", params, member)
+		if err != nil || points != want {
+			t.Fatalf("params=%s member=%v points=%d want=%d err=%v", params, member, points, want, err)
+		}
+	}
+	expect(`{"edit":"upscale","scale":2,"width":1024,"height":1024}`, false, 9)
+	expect(`{"edit":"upscale","scale":4,"width":1024,"height":1024}`, false, 34)
+	expect(`{"edit":"upscale","scale":6,"width":1024,"height":1024}`, false, 76)
+	expect(`{"edit":"upscale","scale":2,"width":2048,"height":2048}`, false, 34)
+	expect(`{"edit":"upscale","scale":2,"width":1024,"height":1024}`, true, 7)
+	expect(`{"edit":"upscale","scale":4}`, false, 32)
+	expect(`{"edit":"upscale","scale":6}`, false, 72)
+	expect(`{"edit":"upscale","scale":3,"width":1024,"height":1024}`, false, 9)
+	expect(`{"edit":"upscale","scale":2,"width":100,"height":100}`, false, 8)
+	expect(`{"edit":"upscale","scale":4,"width":100,"height":100}`, false, 32)
+	expect(`{"edit":"upscale","scale":6,"width":100,"height":100}`, false, 72)
+	expect(`{"scale":4,"width":1024,"height":1024}`, false, 8)
+}
+
 // TestBillingRoutesRequireAuth 付费域用户/管理路由未登录拒绝，公开路由可访问。
 func TestBillingRoutesRequireAuth(t *testing.T) {
 	mock := initMockDB(t)
